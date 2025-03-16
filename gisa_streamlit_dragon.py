@@ -3,9 +3,7 @@ import pandas as pd
 import datetime
 import time
 
-GITHUB_CSV_URL = os.getenv("CSV_URL", "")  # 기본값을 빈 문자열("")로 설정
-if not GITHUB_CSV_URL:
-    raise ValueError("CSV_URL 환경 변수가 설정되지 않았습니다.")
+GITHUB_CSV_URL = st.secrets["CSV_URL"] + f"?nocache={int(time.time())}"
     
 def load_data():
     """CSV를 불러와 DataFrame으로 반환합니다."""

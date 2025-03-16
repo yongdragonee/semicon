@@ -3,7 +3,7 @@ import pandas as pd
 import datetime
 import time
 
-GITHUB_CSV_URL = os.getenv("GITHUB_CSV_URL") + f"?nocache={int(time.time())}"
+GITHUB_CSV_URL = os.getenv("CSV_URL") + f"?nocache={int(time.time())}"
 
 def load_data():
     """CSV를 불러와 DataFrame으로 반환합니다."""

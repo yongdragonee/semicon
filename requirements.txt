@@ -13,3 +13,4 @@ tiktoken==0.8.0
 pypdf==5.2.0
 beautifulsoup4==4.13.1
 sentence-transformers
+yfinance

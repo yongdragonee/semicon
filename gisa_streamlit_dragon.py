@@ -6,9 +6,17 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import os
+import urllib.request
 
-# 폰트 경로 지정
-font_path = 'https://raw.githubusercontent.com/yongdragonee/semicon/main/NanumGothicCoding.ttf'  # 프로젝트 내에 포함한 경로
+# GitHub에서 폰트 파일 다운로드
+font_url = 'https://raw.githubusercontent.com/yongdragonee/semicon/main/NanumGothicCoding.ttf'
+font_path = './NanumGothicCoding.ttf'
+
+# 파일이 없으면 다운로드
+if not os.path.exists(font_path):
+    urllib.request.urlretrieve(font_url, font_path)
+
+# 폰트 설정
 fontprop = fm.FontProperties(fname=font_path)
 
 # ===============================================

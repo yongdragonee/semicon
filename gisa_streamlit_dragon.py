@@ -218,8 +218,6 @@ with col2:
                     changes["최근1년"] = (series.iloc[-1] / candidate365.iloc[-1] - 1) * 100 if len(candidate365) > 0 else None
                 else:
                     changes["최근7일"] = changes["최근1달"] = changes["최근1년"] = None
-                right_pct_changes[ticker] = changes
-
     except Exception as e:
         st.error(f"삼성전자/SK하이닉스 데이터를 가져오는 중 오류 발생: {e}")
 

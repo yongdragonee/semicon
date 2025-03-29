@@ -108,9 +108,9 @@ if search_query:
 st.write(f"**총 기사 수:** {len(filtered_df)}개")
 
 # ===============================================
-# 5. 주가 정보 조회 - yfinance 사용 (최근 1년)
+# 5. 주가 정보 조회 - yfinance 사용 (최근 1년, 통합 차트)
 # ===============================================
-st.header("📈 주가 정보 조회 (최근 1년)")
+st.header("📈 주가 정보 조회 (최근 1년) - 통합 차트")
 # 4개 주가: 코스피지수, 코스닥지수, 삼성전자, SK하이닉스
 stock_tickers = {
     "코스피지수": "^KS11",
@@ -123,44 +123,28 @@ today = datetime.date.today()
 start_date_for_yf = today - datetime.timedelta(days=365)
 end_date_for_yf = today + datetime.timedelta(days=1)
 
-for name, ticker in stock_tickers.items():
-    st.subheader(f"{name} ({ticker})")
-    try:
-        stock_data = yf.download(
-            ticker,
-            start=start_date_for_yf,
-            end=end_date_for_yf
-        )
-        if stock_data.empty:
-            st.warning(f"{name}의 해당 기간 주가 데이터가 없습니다.")
-            continue
-
-        # 컬럼이 튜플 형태인지 확인 (예: ("Close", "005930.KS"))
-        first_col = stock_data.columns[0]
-        if isinstance(first_col, tuple):
-            # 'Close'에 해당하는 튜플 컬럼 찾기
-            close_cols = [col for col in stock_data.columns if col[0] == 'Close']
-            if not close_cols:
-                st.warning(f"{name}의 데이터에 'Close' 열이 없습니다.")
-                continue
-            # 티커별로 저장된 경우 해당 티커에 맞는 컬럼 선택
-            close_cols_filtered = [col for col in close_cols if col[1] == ticker]
-            target_col = close_cols_filtered[0] if close_cols_filtered else close_cols[0]
-            close_data = stock_data[target_col].to_frame(name='Close')
+tickers = list(stock_tickers.values())
+try:
+    # 4개 티커를 한 번에 다운로드
+    all_data = yf.download(tickers, start=start_date_for_yf, end=end_date_for_yf)
+    if all_data.empty:
+        st.warning("해당 기간에 대한 주가 데이터가 없습니다.")
+    else:
+        # 멀티티커의 경우, 컬럼이 MultiIndex로 구성됨
+        if isinstance(all_data.columns, pd.MultiIndex):
+            close_data = all_data['Close']
         else:
-            if 'Close' in stock_data.columns:
-                # 단일 티커의 경우, 'Close' 열만 선택 후 컬럼 이름 재정의
-                close_data = stock_data[['Close']]
-                close_data.columns = ['Close']
-            else:
-                st.warning(f"{name}의 데이터에 'Close' 열이 없습니다.")
-                continue
-
+            close_data = all_data[['Close']]
+        
+        # 컬럼 이름을 티커에서 한글 이름으로 변경
+        ticker_map = {v: k for k, v in stock_tickers.items()}
+        close_data.rename(columns=ticker_map, inplace=True)
+        
         st.line_chart(close_data)
         with st.expander("주가 데이터 펼쳐보기"):
             st.dataframe(close_data)
-    except Exception as e:
-        st.error(f"{name} 주가 데이터를 가져오는 중 오류가 발생했습니다: {e}")
+except Exception as e:
+    st.error(f"통합 주가 데이터를 가져오는 중 오류가 발생했습니다: {e}")
 
 # ===============================================
 # 6. 뉴스 출력

@@ -289,10 +289,10 @@ for ticker in ["코스피지수", "코스닥지수"]:
     left_data_list.append({
         "지수": ticker,
         date_label: f"{current_price:.0f}" if len(series) > 0 else "데이터 부족",
-        "최근1일": f"{pct_1d:.1f}%" if pct_1d is not None else "데이터 부족",
-        "최근7일": f"{pct_7d:.1f}%" if pct_7d is not None else "데이터 부족",
-        "최근1달": f"{pct_30d:.1f}%" if pct_30d is not None else "데이터 부족",
-        "최근1년": f"{pct_365d:.1f}%" if pct_365d is not None else "데이터 부족"
+        "-1D": f"{pct_1d:.1f}%" if pct_1d is not None else "데이터 부족",
+        "-1W": f"{pct_7d:.1f}%" if pct_7d is not None else "데이터 부족",
+        "-1M": f"{pct_30d:.1f}%" if pct_30d is not None else "데이터 부족",
+        "-1Y": f"{pct_365d:.1f}%" if pct_365d is not None else "데이터 부족"
     })
 left_pct_df = pd.DataFrame(left_data_list)
 st.table(left_pct_df)
@@ -320,10 +320,10 @@ for ticker in ["삼성전자", "SK하이닉스"]:
     right_data_list.append({
         "종목": ticker,
         date_label: f"{current_price:.0f}" if len(series) > 0 else "데이터 부족",
-        "최근1일": f"{pct_1d:.1f}%" if pct_1d is not None else "데이터 부족",
-        "최근7일": f"{pct_7d:.1f}%" if pct_7d is not None else "데이터 부족",
-        "최근1달": f"{pct_30d:.1f}%" if pct_30d is not None else "데이터 부족",
-        "최근1년": f"{pct_365d:.1f}%" if pct_365d is not None else "데이터 부족"
+        "-1D": f"{pct_1d:.1f}%" if pct_1d is not None else "데이터 부족",
+        "-1W": f"{pct_7d:.1f}%" if pct_7d is not None else "데이터 부족",
+        "-1M": f"{pct_30d:.1f}%" if pct_30d is not None else "데이터 부족",
+        "-1Y": f"{pct_365d:.1f}%" if pct_365d is not None else "데이터 부족"
     })
 right_pct_df = pd.DataFrame(right_data_list)
 st.table(right_pct_df)

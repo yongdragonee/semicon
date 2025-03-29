@@ -132,17 +132,18 @@ if stock_ticker:
         if not stock_data.empty:
             st.subheader(f"최근 1년 주가 추이: {stock_ticker}")
 
-            # 1) xs('Close', level=0, axis=1)으로 'Close' 레벨만 추출
-            close_data = stock_data.xs('Close', axis=1, level=0)
+            # 1) 'Close' 행만 선택 (멀티 인덱스 튜플로 필터링)
+            stock_data2 = stock_data.loc[:, [("Close", "005930.KS")]]
             
-            # 2) 이제 close_data.columns == ['005930.KS'] (단일 인덱스)
-            st.write(close_data.head())
+            # 2) 이제 stock_data.columns == [('Close','005930.KS')]
+            stock_data2.columns = stock_data2.columns.droplevel(level=0)
+            # => ('Close','005930.KS') 가 '005930.KS'로 변환
             
-            # 3) 라인 차트
-            st.line_chart(close_data)
-                        
+            # DataFrame 한 컬럼: columns == ['005930.KS']
+            st.line_chart(stock_data2)
+                                    
             with st.expander("주가 데이터 펼쳐보기"):
-                st.dataframe(stock_data)
+                st.dataframe(stock_data2)
         else:
             st.warning("해당 기간에 대한 주가 데이터가 없습니다.")
 

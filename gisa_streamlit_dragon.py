@@ -129,8 +129,8 @@ else:
 # yfinance는 end_date를 "포함하지 않는" 방식이기 때문에 보통 +1일 정도 여유를 둡니다.
 end_date_for_yf = end_date + datetime.timedelta(days=1)
 
-# 주가 가져오기
 if stock_ticker:
+    # 데이터 다운로드 시도
     try:
         stock_data = yf.download(
             stock_ticker,
@@ -138,17 +138,23 @@ if stock_ticker:
             end=end_date_for_yf
         )
 
-        if not stock_data.empty:
-            st.subheader(f"주가 추이: {stock_ticker}")
-            # 종가(Close) 기준 라인 차트
-            st.line_chart(stock_data["Close"])
-            
-            # 원하는 경우, 데이터프레임 자체도 표시
-            with st.expander("주가 데이터 펼쳐보기"):
-                st.dataframe(stock_data)
-        else:
-            st.warning("해당 기간에 대한 주가 데이터가 없습니다.")
+        st.write("## 주가 데이터 확인")
+        st.write("Shape:", stock_data.shape)
+        st.write(stock_data.head(5))
+        st.write("Columns:", stock_data.columns.tolist())
 
+        if not stock_data.empty:
+            # "Close" 컬럼이 있는지 우선 확인
+            if "Close" in stock_data.columns:
+                st.line_chart(stock_data["Close"])
+            else:
+                st.warning("'Close' 컬럼이 없어 'Adj Close'를 대신 사용합니다.")
+                if "Adj Close" in stock_data.columns:
+                    st.line_chart(stock_data["Adj Close"])
+                else:
+                    st.error("'Close'나 'Adj Close' 모두 없음 - 데이터 확인 필요!")
+        else:
+            st.warning(f"{stock_ticker}의 {start_date}부터 {end_date} 사이에 데이터가 없습니다.")
     except Exception as e:
         st.error(f"주가 데이터를 가져오는 중 오류가 발생했습니다: {e}")
 

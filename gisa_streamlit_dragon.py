@@ -89,6 +89,7 @@ search_query = st.sidebar.text_input(
 
 # ---- 사이드바 검색어 필터 (버전) ----
 st.sidebar.write("문의/아이디어 : yh9003.lee@samsung.com")
+st.sidebar.write("3/5 Streamlit 기반 오픈")
 st.sidebar.write("3/13 검색기능 추가")
 st.sidebar.write("3/29 주가현황 추가")
 

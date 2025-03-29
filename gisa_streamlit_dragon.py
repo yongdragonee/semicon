@@ -62,7 +62,7 @@ else:
 # ===============================================
 # 3. 화면 구성
 # ===============================================
-st.title("📢 반도체 뉴스레터(Rev.25.3.29)")
+st.title("📢 반도체 뉴스레터(Rev.25.3.13)")
 st.write("문의/아이디어 : yh9003.lee@samsung.com")
 
 # ---- 사이드바 날짜 필터 옵션 ----
@@ -123,9 +123,9 @@ if search_query:
 st.write(f"**총 기사 수:** {len(filtered_df)}개")
 
 # ===============================================
-# 5. 주가 정보 조회 - yfinance 사용 (최근 1년)
+# 5. 주가 정보 조회 - yfinance 사용 (최근 1년, Dual Y-Axis 그래프)
 # ===============================================
-st.header("📈 주가 정보 조회 (최근 1년)")
+st.header("📈 주가 정보 조회 (최근 1년) - Dual Y-Axis 그래프")
 
 today = datetime.date.today()
 start_date_for_yf = today - datetime.timedelta(days=365)
@@ -165,9 +165,54 @@ with col1:
             ax2.tick_params(axis='y', labelcolor='red')
             lines1, labels1 = ax1.get_legend_handles_labels()
             lines2, labels2 = ax2.get_legend_handles_labels()
-            ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left',prop=fontprop)
+            ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', prop=fontprop)
             ax1.set_title("코스피/코스닥 지수", fontproperties=fontprop)
             st.pyplot(fig)
+            
+            # ----- 코스피/코스닥 주가 변동률 계산 및 출력 -----
+            st.markdown("#### 코스피/코스닥 주가 변동률")
+            left_pct_changes = {}
+            for ticker in ["코스피지수", "코스닥지수"]:
+                series = close_left[ticker].dropna()
+                changes = {}
+                latest_date = series.index.max()
+                # 최근 1일: 전 거래일 기준 (날짜 포함)
+                prev_days = series.index[series.index < latest_date]
+                if len(prev_days) > 0:
+                    prev_date = prev_days.max()
+                    changes[f"최근1일 ({prev_date.strftime('%Y-%m-%d')})"] = (series.loc[latest_date] / series.loc[prev_date] - 1) * 100
+                else:
+                    changes["최근1일"] = None
+                # 최근 7일: (최근 거래일 기준 7일 전의 가장 가까운 날짜)
+                candidate7 = series.index[series.index <= latest_date - pd.Timedelta(days=7)]
+                if len(candidate7) > 0:
+                    date7 = candidate7.max()
+                    changes["최근7일"] = (series.loc[latest_date] / series.loc[date7] - 1) * 100
+                else:
+                    changes["최근7일"] = None
+                # 최근 1달: (30일 전 기준)
+                candidate30 = series.index[series.index <= latest_date - pd.Timedelta(days=30)]
+                if len(candidate30) > 0:
+                    date30 = candidate30.max()
+                    changes["최근1달"] = (series.loc[latest_date] / series.loc[date30] - 1) * 100
+                else:
+                    changes["최근1달"] = None
+                # 최근 1년: (365일 전 기준)
+                candidate365 = series.index[series.index <= latest_date - pd.Timedelta(days=365)]
+                if len(candidate365) > 0:
+                    date365 = candidate365.max()
+                    changes["최근1년"] = (series.loc[latest_date] / series.loc[date365] - 1) * 100
+                else:
+                    changes["최근1년"] = None
+                left_pct_changes[ticker] = changes
+
+            for ticker, changes in left_pct_changes.items():
+                st.write(f"**{ticker} 주가 변동률**")
+                for period, pct in changes.items():
+                    if pct is not None:
+                        st.write(f"- {period}: {pct:.2f}%")
+                    else:
+                        st.write(f"- {period}: 데이터 부족")
     except Exception as e:
         st.error(f"코스피/코스닥 데이터를 가져오는 중 오류 발생: {e}")
 
@@ -201,9 +246,54 @@ with col2:
             ax2.tick_params(axis='y', labelcolor='red')
             lines1, labels1 = ax1.get_legend_handles_labels()
             lines2, labels2 = ax2.get_legend_handles_labels()
-            ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left',prop=fontprop)
+            ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', prop=fontprop)
             ax1.set_title("삼성전자 / SK하이닉스", fontproperties=fontprop)
             st.pyplot(fig)
+            
+            # ----- 삼성전자/SK하이닉스 주가 변동률 계산 및 출력 -----
+            st.markdown("#### 삼성전자 / SK하이닉스 주가 변동률")
+            right_pct_changes = {}
+            for ticker in ["삼성전자", "SK하이닉스"]:
+                series = close_right[ticker].dropna()
+                changes = {}
+                latest_date = series.index.max()
+                # 최근 1일: 전 거래일 기준 (날짜 포함)
+                prev_days = series.index[series.index < latest_date]
+                if len(prev_days) > 0:
+                    prev_date = prev_days.max()
+                    changes[f"최근1일 ({prev_date.strftime('%Y-%m-%d')})"] = (series.loc[latest_date] / series.loc[prev_date] - 1) * 100
+                else:
+                    changes["최근1일"] = None
+                # 최근 7일
+                candidate7 = series.index[series.index <= latest_date - pd.Timedelta(days=7)]
+                if len(candidate7) > 0:
+                    date7 = candidate7.max()
+                    changes["최근7일"] = (series.loc[latest_date] / series.loc[date7] - 1) * 100
+                else:
+                    changes["최근7일"] = None
+                # 최근 1달
+                candidate30 = series.index[series.index <= latest_date - pd.Timedelta(days=30)]
+                if len(candidate30) > 0:
+                    date30 = candidate30.max()
+                    changes["최근1달"] = (series.loc[latest_date] / series.loc[date30] - 1) * 100
+                else:
+                    changes["최근1달"] = None
+                # 최근 1년
+                candidate365 = series.index[series.index <= latest_date - pd.Timedelta(days=365)]
+                if len(candidate365) > 0:
+                    date365 = candidate365.max()
+                    changes["최근1년"] = (series.loc[latest_date] / series.loc[date365] - 1) * 100
+                else:
+                    changes["최근1년"] = None
+                right_pct_changes[ticker] = changes
+
+            for ticker, changes in right_pct_changes.items():
+                st.write(f"**{ticker} 주가 변동률**")
+                for period, pct in changes.items():
+                    if pct is not None:
+                        st.write(f"- {period}: {pct:.2f}%")
+                    else:
+                        st.write(f"- {period}: 데이터 부족")
     except Exception as e:
         st.error(f"삼성전자/SK하이닉스 데이터를 가져오는 중 오류 발생: {e}")
 

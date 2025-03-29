@@ -11,12 +11,8 @@ import urllib.request
 # GitHub에서 폰트 파일 다운로드
 font_url = 'https://raw.githubusercontent.com/yongdragonee/semicon/main/NanumGothicCoding.ttf'
 font_path = './NanumGothicCoding.ttf'
-
-# 파일이 없으면 다운로드
 if not os.path.exists(font_path):
     urllib.request.urlretrieve(font_url, font_path)
-
-# 폰트 설정
 fontprop = fm.FontProperties(fname=font_path)
 
 # ===============================================
@@ -24,25 +20,15 @@ fontprop = fm.FontProperties(fname=font_path)
 # ===============================================
 def load_data(csv_url):
     df = pd.read_csv(csv_url, encoding='utf-8-sig')
-    
-    # 날짜 컬럼 변환 및 정렬
     df['date'] = pd.to_datetime(df['date'], errors='coerce')
     df = df.sort_values(by='date', ascending=False)
-    
-    # 키워드 분할
     def split_keywords(kw_string):
         if pd.isna(kw_string):
             return []
         return [k.strip() for k in kw_string.split(',') if k.strip()]
-    
     df['키워드_목록'] = df['키워드'].apply(split_keywords)
-    
-    # explode
     df = df.explode('키워드_목록', ignore_index=True)
-    
-    # '관련 없음' → '기타'
     df['키워드_목록'] = df['키워드_목록'].replace('관련 없음', '기타')
-    
     return df
 
 # ===============================================
@@ -71,17 +57,14 @@ date_filter_option = st.sidebar.radio(
     ["최근 7일", "최근 1달", "전체", "직접 선택"],
     index=0
 )
-
-# 날짜 리스트 준비
 unique_dates = sorted(list(set(df['date'].dt.date.dropna())), reverse=True)
-
 if date_filter_option == "최근 7일":
     selected_dates = [d for d in unique_dates if d >= one_week_ago.date()]
 elif date_filter_option == "최근 1달":
     selected_dates = [d for d in unique_dates if d >= one_month_ago.date()]
 elif date_filter_option == "전체":
     selected_dates = unique_dates
-else:  # "직접 선택"
+else:
     selected_dates = st.sidebar.multiselect(
         "📅 날짜를 선택하세요 (복수 선택 가능)",
         unique_dates,
@@ -106,40 +89,31 @@ search_query = st.sidebar.text_input(
 # 4. 뉴스 데이터 필터링
 # ===============================================
 filtered_df = df.copy()
-
 if selected_dates:
     filtered_df = filtered_df[filtered_df['date'].dt.date.isin(selected_dates)]
-
 if selected_keywords:
     filtered_df = filtered_df[filtered_df['키워드_목록'].isin(selected_keywords)]
-
 if search_query:
     search_query_lower = search_query.lower()
     filtered_df = filtered_df[
         filtered_df['title'].str.lower().str.contains(search_query_lower, na=False) |
         filtered_df['summary'].fillna('').str.lower().str.contains(search_query_lower, na=False)
     ]
-
 st.write(f"**총 기사 수:** {len(filtered_df)}개")
 
 # ===============================================
 # 5. 주가 정보 조회 - yfinance 사용 (최근 1년, Dual Y-Axis 그래프)
 # ===============================================
 st.header("📈 주가 정보 조회 (최근 1년) - Dual Y-Axis 그래프")
-
 today = datetime.date.today()
-start_date_for_yf = today - datetime.timedelta(days=365)
+start_date_for_yf = today - datetime.timedelta(days=370)
 end_date_for_yf = today + datetime.timedelta(days=1)
-
 col1, col2 = st.columns(2)
 
 # 좌측: 코스피지수 / 코스닥지수 (Dual Y-Axis)
 with col1:
     st.subheader("코스피/코스닥")
-    left_tickers = {
-        "코스피지수": "^KS11",
-        "코스닥지수": "^KQ11"
-    }
+    left_tickers = {"코스피지수": "^KS11", "코스닥지수": "^KQ11"}
     left_list = list(left_tickers.values())
     try:
         left_data = yf.download(left_list, start=start_date_for_yf, end=end_date_for_yf)
@@ -173,37 +147,38 @@ with col1:
             st.markdown("#### 코스피/코스닥 주가 변동률")
             left_pct_changes = {}
             for ticker in ["코스피지수", "코스닥지수"]:
-                series = close_left[ticker].dropna()
+                # 데이터의 인덱스를 날짜순(오름차순)으로 정렬
+                series = close_left[ticker].dropna().sort_index()
                 changes = {}
-                latest_date = series.index.max()
-                # 최근 1일: 전 거래일 기준 (날짜 포함)
-                prev_days = series.index[series.index < latest_date]
-                if len(prev_days) > 0:
-                    prev_date = prev_days.max()
-                    changes[f"최근1일 ({prev_date.strftime('%Y-%m-%d')})"] = (series.loc[latest_date] / series.loc[prev_date] - 1) * 100
+                # 최근 1일: 바로 이전 거래일 (데이터상에서 마지막 전 거래일)
+                if len(series) >= 2:
+                    latest_date = series.index[-1]
+                    prev_date = series.index[-2]
+                    changes[f"최근1일 ({prev_date.strftime('%Y-%m-%d')})"] = (series.iloc[-1] / series.iloc[-2] - 1) * 100
                 else:
                     changes["최근1일"] = None
-                # 최근 7일: (최근 거래일 기준 7일 전의 가장 가까운 날짜)
-                candidate7 = series.index[series.index <= latest_date - pd.Timedelta(days=7)]
-                if len(candidate7) > 0:
-                    date7 = candidate7.max()
-                    changes["최근7일"] = (series.loc[latest_date] / series.loc[date7] - 1) * 100
+                # 최근 7일: 최신 거래일 기준 7일 전 이하의 가장 가까운 거래일
+                if len(series) > 0:
+                    latest_date = series.index[-1]
+                    candidate7 = series[series.index <= latest_date - pd.Timedelta(days=7)]
+                    if len(candidate7) > 0:
+                        changes["최근7일"] = (series.iloc[-1] / candidate7.iloc[-1] - 1) * 100
+                    else:
+                        changes["최근7일"] = None
+                    # 최근 1달: 30일 전 이하의 가장 가까운 거래일
+                    candidate30 = series[series.index <= latest_date - pd.Timedelta(days=30)]
+                    if len(candidate30) > 0:
+                        changes["최근1달"] = (series.iloc[-1] / candidate30.iloc[-1] - 1) * 100
+                    else:
+                        changes["최근1달"] = None
+                    # 최근 1년: 365일 전 이하의 가장 가까운 거래일
+                    candidate365 = series[series.index <= latest_date - pd.Timedelta(days=365)]
+                    if len(candidate365) > 0:
+                        changes["최근1년"] = (series.iloc[-1] / candidate365.iloc[-1] - 1) * 100
+                    else:
+                        changes["최근1년"] = None
                 else:
-                    changes["최근7일"] = None
-                # 최근 1달: (30일 전 기준)
-                candidate30 = series.index[series.index <= latest_date - pd.Timedelta(days=30)]
-                if len(candidate30) > 0:
-                    date30 = candidate30.max()
-                    changes["최근1달"] = (series.loc[latest_date] / series.loc[date30] - 1) * 100
-                else:
-                    changes["최근1달"] = None
-                # 최근 1년: (365일 전 기준)
-                candidate365 = series.index[series.index <= latest_date - pd.Timedelta(days=365)]
-                if len(candidate365) > 0:
-                    date365 = candidate365.max()
-                    changes["최근1년"] = (series.loc[latest_date] / series.loc[date365] - 1) * 100
-                else:
-                    changes["최근1년"] = None
+                    changes["최근7일"] = changes["최근1달"] = changes["최근1년"] = None
                 left_pct_changes[ticker] = changes
 
             for ticker, changes in left_pct_changes.items():
@@ -219,10 +194,7 @@ with col1:
 # 우측: 삼성전자 / SK하이닉스 (Dual Y-Axis)
 with col2:
     st.subheader("삼성전자 / SK하이닉스")
-    right_tickers = {
-        "삼성전자": "005930.KS",
-        "SK하이닉스": "000660.KS"
-    }
+    right_tickers = {"삼성전자": "005930.KS", "SK하이닉스": "000660.KS"}
     right_list = list(right_tickers.values())
     try:
         right_data = yf.download(right_list, start=start_date_for_yf, end=end_date_for_yf)
@@ -250,41 +222,36 @@ with col2:
             ax1.set_title("삼성전자 / SK하이닉스", fontproperties=fontprop)
             st.pyplot(fig)
             
-            # ----- 삼성전자/SK하이닉스 주가 변동률 계산 및 출력 -----
             st.markdown("#### 삼성전자 / SK하이닉스 주가 변동률")
             right_pct_changes = {}
             for ticker in ["삼성전자", "SK하이닉스"]:
-                series = close_right[ticker].dropna()
+                series = close_right[ticker].dropna().sort_index()
                 changes = {}
-                latest_date = series.index.max()
-                # 최근 1일: 전 거래일 기준 (날짜 포함)
-                prev_days = series.index[series.index < latest_date]
-                if len(prev_days) > 0:
-                    prev_date = prev_days.max()
-                    changes[f"최근1일 ({prev_date.strftime('%Y-%m-%d')})"] = (series.loc[latest_date] / series.loc[prev_date] - 1) * 100
+                if len(series) >= 2:
+                    latest_date = series.index[-1]
+                    prev_date = series.index[-2]
+                    changes[f"최근1일 ({prev_date.strftime('%Y-%m-%d')})"] = (series.iloc[-1] / series.iloc[-2] - 1) * 100
                 else:
                     changes["최근1일"] = None
-                # 최근 7일
-                candidate7 = series.index[series.index <= latest_date - pd.Timedelta(days=7)]
-                if len(candidate7) > 0:
-                    date7 = candidate7.max()
-                    changes["최근7일"] = (series.loc[latest_date] / series.loc[date7] - 1) * 100
+                if len(series) > 0:
+                    latest_date = series.index[-1]
+                    candidate7 = series[series.index <= latest_date - pd.Timedelta(days=7)]
+                    if len(candidate7) > 0:
+                        changes["최근7일"] = (series.iloc[-1] / candidate7.iloc[-1] - 1) * 100
+                    else:
+                        changes["최근7일"] = None
+                    candidate30 = series[series.index <= latest_date - pd.Timedelta(days=30)]
+                    if len(candidate30) > 0:
+                        changes["최근1달"] = (series.iloc[-1] / candidate30.iloc[-1] - 1) * 100
+                    else:
+                        changes["최근1달"] = None
+                    candidate365 = series[series.index <= latest_date - pd.Timedelta(days=365)]
+                    if len(candidate365) > 0:
+                        changes["최근1년"] = (series.iloc[-1] / candidate365.iloc[-1] - 1) * 100
+                    else:
+                        changes["최근1년"] = None
                 else:
-                    changes["최근7일"] = None
-                # 최근 1달
-                candidate30 = series.index[series.index <= latest_date - pd.Timedelta(days=30)]
-                if len(candidate30) > 0:
-                    date30 = candidate30.max()
-                    changes["최근1달"] = (series.loc[latest_date] / series.loc[date30] - 1) * 100
-                else:
-                    changes["최근1달"] = None
-                # 최근 1년
-                candidate365 = series.index[series.index <= latest_date - pd.Timedelta(days=365)]
-                if len(candidate365) > 0:
-                    date365 = candidate365.max()
-                    changes["최근1년"] = (series.loc[latest_date] / series.loc[date365] - 1) * 100
-                else:
-                    changes["최근1년"] = None
+                    changes["최근7일"] = changes["최근1달"] = changes["최근1년"] = None
                 right_pct_changes[ticker] = changes
 
             for ticker, changes in right_pct_changes.items():
@@ -301,17 +268,14 @@ with col2:
 # 6. 뉴스 출력
 # ===============================================
 grouped_by_date = filtered_df.groupby(filtered_df['date'].dt.date, sort=False)
-
 for current_date, date_group in grouped_by_date:
     st.markdown(f"## {current_date.strftime('%Y-%m-%d')}")
     grouped_by_keyword = date_group.groupby('키워드_목록', sort=False)
-    
     for keyword_value, keyword_group in grouped_by_keyword:
         if pd.notna(keyword_value) and str(keyword_value).strip():
             st.markdown(f"### ▶️ {keyword_value}")
         else:
             st.markdown("### ▶️ (키워드 없음)")
-        
         for idx, row in keyword_group.iterrows():
             with st.expander(f"📰 {row['title']}"):
                 st.write(f"**요약:** {row.get('summary', '요약 정보가 없습니다.')}")

@@ -265,6 +265,62 @@ with col2:
     except Exception as e:
         st.error(f"삼성전자/SK하이닉스 데이터를 가져오는 중 오류 발생: {e}")
 
+# ----- 코스피/코스닥 주가 변동률 계산 및 테이블 출력 -----
+left_data_list = []
+for ticker in ["코스피지수", "코스닥지수"]:
+    series = close_left[ticker].dropna().sort_index()
+    pct_1d = pct_7d = pct_30d = pct_365d = None
+    if len(series) >= 2:
+        pct_1d = (series.iloc[-1] / series.iloc[-2] - 1) * 100
+    if len(series) > 0:
+        latest_date = series.index[-1]
+        candidate7 = series[series.index <= latest_date - pd.Timedelta(days=7)]
+        if len(candidate7) > 0:
+            pct_7d = (series.iloc[-1] / candidate7.iloc[-1] - 1) * 100
+        candidate30 = series[series.index <= latest_date - pd.Timedelta(days=30)]
+        if len(candidate30) > 0:
+            pct_30d = (series.iloc[-1] / candidate30.iloc[-1] - 1) * 100
+        candidate365 = series[series.index <= latest_date - pd.Timedelta(days=365)]
+        if len(candidate365) > 0:
+            pct_365d = (series.iloc[-1] / candidate365.iloc[-1] - 1) * 100
+    left_data_list.append({
+        "지수": ticker,
+        "최근1일": f"{pct_1d:.2f}%" if pct_1d is not None else "데이터 부족",
+        "최근7일": f"{pct_7d:.2f}%" if pct_7d is not None else "데이터 부족",
+        "최근1달": f"{pct_30d:.2f}%" if pct_30d is not None else "데이터 부족",
+        "최근1년": f"{pct_365d:.2f}%" if pct_365d is not None else "데이터 부족"
+    })
+left_pct_df = pd.DataFrame(left_data_list)
+st.table(left_pct_df)
+
+# ----- 삼성전자 / SK하이닉스 주가 변동률 계산 및 테이블 출력 -----
+right_data_list = []
+for ticker in ["삼성전자", "SK하이닉스"]:
+    series = close_right[ticker].dropna().sort_index()
+    pct_1d = pct_7d = pct_30d = pct_365d = None
+    if len(series) >= 2:
+        pct_1d = (series.iloc[-1] / series.iloc[-2] - 1) * 100
+    if len(series) > 0:
+        latest_date = series.index[-1]
+        candidate7 = series[series.index <= latest_date - pd.Timedelta(days=7)]
+        if len(candidate7) > 0:
+            pct_7d = (series.iloc[-1] / candidate7.iloc[-1] - 1) * 100
+        candidate30 = series[series.index <= latest_date - pd.Timedelta(days=30)]
+        if len(candidate30) > 0:
+            pct_30d = (series.iloc[-1] / candidate30.iloc[-1] - 1) * 100
+        candidate365 = series[series.index <= latest_date - pd.Timedelta(days=365)]
+        if len(candidate365) > 0:
+            pct_365d = (series.iloc[-1] / candidate365.iloc[-1] - 1) * 100
+    right_data_list.append({
+        "종목": ticker,
+        "최근1일": f"{pct_1d:.2f}%" if pct_1d is not None else "데이터 부족",
+        "최근7일": f"{pct_7d:.2f}%" if pct_7d is not None else "데이터 부족",
+        "최근1달": f"{pct_30d:.2f}%" if pct_30d is not None else "데이터 부족",
+        "최근1년": f"{pct_365d:.2f}%" if pct_365d is not None else "데이터 부족"
+    })
+right_pct_df = pd.DataFrame(right_data_list)
+st.table(right_pct_df)
+
 # ===============================================
 # 6. 뉴스 출력
 # ===============================================

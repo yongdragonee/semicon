@@ -274,6 +274,7 @@ for ticker in ["코스피지수", "코스닥지수"]:
     if len(series) >= 2:
         pct_1d = (series.iloc[-1] / series.iloc[-2] - 1) * 100
     if len(series) > 0:
+        current_price = series.iloc[-1]
         latest_date = series.index[-1]
         candidate7 = series[series.index <= latest_date - pd.Timedelta(days=7)]
         if len(candidate7) > 0:
@@ -286,6 +287,7 @@ for ticker in ["코스피지수", "코스닥지수"]:
             pct_365d = (series.iloc[-1] / candidate365.iloc[-1] - 1) * 100
     left_data_list.append({
         "지수": ticker,
+        "현재주가": f"{current_price:.2f}" if len(series) > 0 else "데이터 부족",
         "최근1일": f"{pct_1d:.2f}%" if pct_1d is not None else "데이터 부족",
         "최근7일": f"{pct_7d:.2f}%" if pct_7d is not None else "데이터 부족",
         "최근1달": f"{pct_30d:.2f}%" if pct_30d is not None else "데이터 부족",
@@ -302,6 +304,7 @@ for ticker in ["삼성전자", "SK하이닉스"]:
     if len(series) >= 2:
         pct_1d = (series.iloc[-1] / series.iloc[-2] - 1) * 100
     if len(series) > 0:
+        current_price = series.iloc[-1]
         latest_date = series.index[-1]
         candidate7 = series[series.index <= latest_date - pd.Timedelta(days=7)]
         if len(candidate7) > 0:
@@ -314,6 +317,7 @@ for ticker in ["삼성전자", "SK하이닉스"]:
             pct_365d = (series.iloc[-1] / candidate365.iloc[-1] - 1) * 100
     right_data_list.append({
         "종목": ticker,
+        "현재주가": f"{current_price:.2f}" if len(series) > 0 else "데이터 부족",
         "최근1일": f"{pct_1d:.2f}%" if pct_1d is not None else "데이터 부족",
         "최근7일": f"{pct_7d:.2f}%" if pct_7d is not None else "데이터 부족",
         "최근1달": f"{pct_30d:.2f}%" if pct_30d is not None else "데이터 부족",

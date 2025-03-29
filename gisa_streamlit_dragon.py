@@ -4,6 +4,7 @@ import datetime
 import time
 import yfinance as yf
 import matplotlib.pyplot as plt
+plt.rcParams['font.family'] = 'Malgun Gothic'  # Windows 환경
 
 # ===============================================
 # 1. CSV 불러오기 함수 (기존 코드와 동일)

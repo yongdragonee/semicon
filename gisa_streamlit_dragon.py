@@ -324,34 +324,69 @@ except Exception as e:
     st.error(f"나스닥, 필라델피아 반도체, 마이크론 데이터를 가져오는 중 오류 발생: {e}")
 
 # ----- 전체 정규화 그래프: 코스닥 제외, 나스닥과 코스피는 점선으로 -----
-st.header("📈 전체 정규화 가격 비교")
+st.header("📈 전체 정규화 가격 비교 (1년 전 대비)")
 try:
     if ('close_left' in globals() or 'close_left' in locals()) and \
        ('close_right' in globals() or 'close_right' in locals()) and \
        ('close_extra' in globals() or 'close_extra' in locals()):
-        
-        # 코스닥만 제거한 데이터프레임 만들기
-        close_left_without_kosdaq = close_left.drop(columns=["코스닥"], errors="ignore")
-        
-        # 국내 + 해외 주가 데이터(코스닥 제외)를 합침
-        all_data = pd.concat([close_left_without_kosdaq, close_right, close_extra], axis=1)
 
-        # 정규화: 각 종목의 첫 거래일 가격을 100으로 설정
-        normalized_all = all_data.apply(lambda x: x / x.iloc[0] * 100)
-        
-        fig, ax = plt.subplots(figsize=(10,6))
-        
-        # 나스닥과 코스피만 점선으로 표시하기 위해 조건 분기
-        for col in normalized_all.columns:
-            if col in ["나스닥", "코스피", "필라델피아"]:
-                ax.plot(normalized_all.index, normalized_all[col], label=col, linestyle="--")
-            else:
-                ax.plot(normalized_all.index, normalized_all[col], label=col, linestyle="-")
-        
-        ax.set_ylabel("정규화 가격 (Base 100)", fontproperties=fontprop)
-        ax.set_title("전체 정규화 가격 비교 (코스닥 제외, 나스닥/코스피 점선)", fontproperties=fontprop)
-        ax.legend(prop=fontprop)
-        st.pyplot(fig)
+        # 우선 코스닥만 제거한 상태(코드상 이미 적용된 로직)
+        close_left_without_kosdaq = close_left.drop(columns=["코스닥"], errors="ignore")
+
+        # 국내 + 해외 주가 데이터(코스닥 제외)를 하나로 합침
+        all_data = pd.concat([close_left_without_kosdaq, close_right, close_extra], axis=1)
+        all_data = all_data.sort_index()  # 혹시 인덱스가 시간 순으로 정렬 안 되어있다면 정렬
+
+        # (1) 전체에서 가장 최신 날짜(end_date) 구하기
+        end_date = all_data.dropna(how='all').index.max()
+
+        # (2) base_date = end_date - 365일
+        base_date = end_date - pd.Timedelta(days=365)
+
+        # (3) 각 종목별로 1년 전 가격(base_value) 찾고, 비율(=정규화) 계산
+        norm_dfs = []
+        valid_cols = []  # 실제로 1년 전 데이터가 존재하는 종목만 담을 리스트
+
+        for col in all_data.columns:
+            series = all_data[col].dropna().sort_index()
+            if series.empty:
+                continue
+
+            # series에서 (base_date 이하) 중 가장 마지막 거래일 찾기
+            base_candidates = series[series.index <= base_date]
+            if base_candidates.empty:
+                # 1년 전 기준 데이터가 전혀 없으면 스킵
+                continue
+
+            base_val = base_candidates.iloc[-1]  # 가장 늦은 거래일의 가격
+            # 정규화: 현재값 / base_val * 100
+            norm_series = (series / base_val) * 100
+            norm_dfs.append(norm_series)
+            valid_cols.append(col)
+
+        if not norm_dfs:
+            st.warning("1년 전 데이터가 없어 정규화 그래프를 그릴 수 없습니다.")
+        else:
+            # (4) 종목별 정규화 시리즈를 합치고, base_date ~ end_date 구간만 추출
+            normalized_all = pd.concat(norm_dfs, axis=1)
+            normalized_all = normalized_all[normalized_all.index >= base_date]
+            normalized_all.columns = valid_cols  # 열 이름 재지정
+
+            # (5) 그래프 그리기
+            fig, ax = plt.subplots(figsize=(10, 6))
+
+            for col in normalized_all.columns:
+                # 나스닥, 코스피, 필라델피아만 점선
+                if col in ["나스닥", "코스피", "필라델피아"]:
+                    ax.plot(normalized_all.index, normalized_all[col], label=col, linestyle="--")
+                else:
+                    ax.plot(normalized_all.index, normalized_all[col], label=col, linestyle="-")
+
+            ax.set_ylabel("정규화 가격 (Base = 1년 전)", fontproperties=fontprop)
+            ax.set_title("전체 정규화 가격 비교 (1년 전 대비)", fontproperties=fontprop)
+            ax.legend(prop=fontprop)
+            st.pyplot(fig)
+
     else:
         st.warning("국내 또는 해외 주가 데이터가 누락되어 전체 정규화 그래프를 그릴 수 없습니다.")
 except Exception as e:

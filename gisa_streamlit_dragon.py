@@ -266,7 +266,38 @@ with col2:
         st.error(f"삼성전자/SK하이닉스 데이터를 가져오는 중 오류 발생: {e}")
 
 # ===============================================
-# 6. 뉴스 출력
+# 6. 종합 주가 변동률 표 출력 (추가)
+# ===============================================
+st.markdown("### 종합 주가 변동률 표")
+
+# 좌측과 우측의 변동률 딕셔너리를 하나로 결합
+all_pct_changes = {}
+
+def simplify_keys(changes):
+    # "최근1일 (날짜)" 같은 키를 "최근1일"로 간단하게 변환
+    simplified = {}
+    for k, v in changes.items():
+        if "최근1일" in k:
+            simplified["최근1일"] = v
+        else:
+            simplified[k] = v
+    return simplified
+
+for ticker, changes in left_pct_changes.items():
+    all_pct_changes[ticker] = simplify_keys(changes)
+for ticker, changes in right_pct_changes.items():
+    all_pct_changes[ticker] = simplify_keys(changes)
+
+# DataFrame으로 변환 (행: 종목, 열: 기간)
+pct_df = pd.DataFrame(all_pct_changes).T
+# 원하는 순서로 열 재정렬
+pct_df = pct_df[['최근1일', '최근7일', '최근1달', '최근1년']]
+
+# 소수점 2자리 포맷 적용하여 표 출력
+st.dataframe(pct_df.style.format("{:.2f}%"))
+
+# ===============================================
+# 7. 뉴스 출력
 # ===============================================
 grouped_by_date = filtered_df.groupby(filtered_df['date'].dt.date, sort=False)
 for current_date, date_group in grouped_by_date:

@@ -51,9 +51,7 @@ else:
 # 3. 화면 구성
 # ===============================================
 st.title("📢 반도체 뉴스레터(Rev.25.3.29)")
-st.write("문의/아이디어 : yh9003.lee@samsung.com")
-st.write("3/13 검색기능 추가")
-st.write("3/29 주가현황 추가")
+
 
 # ---- 사이드바 날짜 필터 옵션 ----
 date_filter_option = st.sidebar.radio(
@@ -88,6 +86,11 @@ search_query = st.sidebar.text_input(
     "🔎 검색어 입력 (제목/요약 포함)",
     help="특정 단어가 포함된 기사만 검색합니다."
 )
+
+# ---- 사이드바 검색어 필터 (버전) ----
+st.sidebar.write("문의/아이디어 : yh9003.lee@samsung.com")
+st.sidebar.write("3/13 검색기능 추가")
+st.sidebar.write("3/29 주가현황 추가")
 
 # ===============================================
 # 4. 뉴스 데이터 필터링

@@ -294,10 +294,9 @@ for ticker in ["코스피지수", "코스닥지수"]:
         "-1Y": f"{pct_365d:.1f}%" if pct_365d is not None else "데이터 부족"
     })
 left_pct_df = pd.DataFrame(left_data_list)
-# Pandas Styler를 이용해 글씨 크기를 작게 설정 (예: 12px)
-styled_left_pct_df = left_pct_df.style.set_properties(**{'font-size': '11px'})
+# Pandas Styler를 이용해 인덱스를 숨기고 글씨 크기를 11px로 설정
+styled_left_pct_df = left_pct_df.style.hide_index().set_properties(**{'font-size': '11px'})
 st.dataframe(styled_left_pct_df)
-
 
 # ----- 삼성전자 / SK하이닉스 주가 변동률 계산 및 테이블 출력 -----
 right_data_list = []
@@ -328,7 +327,7 @@ for ticker in ["삼성전자", "SK하이닉스"]:
         "-1Y": f"{pct_365d:.1f}%" if pct_365d is not None else "데이터 부족"
     })
 right_pct_df = pd.DataFrame(right_data_list)
-styled_right_pct_df = right_pct_df.style.set_properties(**{'font-size': '11px'})
+styled_right_pct_df = right_pct_df.style.hide_index().set_properties(**{'font-size': '11px'})
 st.dataframe(styled_right_pct_df)
 
 

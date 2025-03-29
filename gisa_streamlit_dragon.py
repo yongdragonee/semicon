@@ -3,6 +3,7 @@ import pandas as pd
 import datetime
 import time
 import yfinance as yf
+import matplotlib.pyplot as plt
 
 # ===============================================
 # 1. CSV 불러오기 함수 (기존 코드와 동일)
@@ -108,30 +109,23 @@ if search_query:
 st.write(f"**총 기사 수:** {len(filtered_df)}개")
 
 # ===============================================
-# 5. 주가 정보 조회 - yfinance 사용 (최근 1년, 2개 그래프로 분리)
+# 5. 주가 정보 조회 - yfinance 사용 (최근 1년, Dual Y-Axis 그래프)
 # ===============================================
-st.header("📈 주가 정보 조회 (최근 1년)")
+st.header("📈 주가 정보 조회 (최근 1년) - Dual Y-Axis 그래프")
 
 today = datetime.date.today()
 start_date_for_yf = today - datetime.timedelta(days=365)
 end_date_for_yf = today + datetime.timedelta(days=1)
 
-# 좌측: 코스피지수, 코스닥지수
-left_tickers = {
-    "코스피지수": "^KS11",
-    "코스닥지수": "^KQ11"
-}
-
-# 우측: 삼성전자, SK하이닉스
-right_tickers = {
-    "삼성전자": "005930.KS",
-    "SK하이닉스": "000660.KS"
-}
-
 col1, col2 = st.columns(2)
 
+# 좌측: 코스피지수 / 코스닥지수 (Dual Y-Axis)
 with col1:
     st.subheader("코스피/코스닥")
+    left_tickers = {
+        "코스피지수": "^KS11",
+        "코스닥지수": "^KQ11"
+    }
     left_list = list(left_tickers.values())
     try:
         left_data = yf.download(left_list, start=start_date_for_yf, end=end_date_for_yf)
@@ -145,14 +139,31 @@ with col1:
             # 티커명을 한글로 변경
             ticker_map_left = {v: k for k, v in left_tickers.items()}
             close_left.rename(columns=ticker_map_left, inplace=True)
-            st.line_chart(close_left)
-            with st.expander("코스피/코스닥 데이터 펼쳐보기"):
-                st.dataframe(close_left)
+            
+            # dual y-axis 플롯 생성
+            fig, ax1 = plt.subplots(figsize=(8,4))
+            ax1.plot(close_left.index, close_left["코스피지수"], color='blue', label="코스피지수")
+            ax1.set_ylabel("코스피지수", color='blue')
+            ax1.tick_params(axis='y', labelcolor='blue')
+            ax2 = ax1.twinx()
+            ax2.plot(close_left.index, close_left["코스닥지수"], color='red', label="코스닥지수")
+            ax2.set_ylabel("코스닥지수", color='red')
+            ax2.tick_params(axis='y', labelcolor='red')
+            lines1, labels1 = ax1.get_legend_handles_labels()
+            lines2, labels2 = ax2.get_legend_handles_labels()
+            ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
+            ax1.set_title("코스피/코스닥 지수")
+            st.pyplot(fig)
     except Exception as e:
         st.error(f"코스피/코스닥 데이터를 가져오는 중 오류 발생: {e}")
 
+# 우측: 삼성전자 / SK하이닉스 (Dual Y-Axis)
 with col2:
     st.subheader("삼성전자 / SK하이닉스")
+    right_tickers = {
+        "삼성전자": "005930.KS",
+        "SK하이닉스": "000660.KS"
+    }
     right_list = list(right_tickers.values())
     try:
         right_data = yf.download(right_list, start=start_date_for_yf, end=end_date_for_yf)
@@ -165,9 +176,20 @@ with col2:
                 close_right = right_data[['Close']]
             ticker_map_right = {v: k for k, v in right_tickers.items()}
             close_right.rename(columns=ticker_map_right, inplace=True)
-            st.line_chart(close_right)
-            with st.expander("삼성전자/SK하이닉스 데이터 펼쳐보기"):
-                st.dataframe(close_right)
+            
+            fig, ax1 = plt.subplots(figsize=(8,4))
+            ax1.plot(close_right.index, close_right["삼성전자"], color='blue', label="삼성전자")
+            ax1.set_ylabel("삼성전자", color='blue')
+            ax1.tick_params(axis='y', labelcolor='blue')
+            ax2 = ax1.twinx()
+            ax2.plot(close_right.index, close_right["SK하이닉스"], color='red', label="SK하이닉스")
+            ax2.set_ylabel("SK하이닉스", color='red')
+            ax2.tick_params(axis='y', labelcolor='red')
+            lines1, labels1 = ax1.get_legend_handles_labels()
+            lines2, labels2 = ax2.get_legend_handles_labels()
+            ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
+            ax1.set_title("삼성전자 / SK하이닉스")
+            st.pyplot(fig)
     except Exception as e:
         st.error(f"삼성전자/SK하이닉스 데이터를 가져오는 중 오류 발생: {e}")
 

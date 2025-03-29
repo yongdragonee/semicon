@@ -4,12 +4,10 @@ import datetime
 import time
 import yfinance as yf
 import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
 
-font_list = fm.findSystemFonts(fontext='ttf')
-
-for font in font_list:
-    font
+# 한글 폰트 설정 (Windows의 경우)
+plt.rcParams['font.family'] = 'Malgun Gothic'
+plt.rcParams['axes.unicode_minus'] = False  # 마이너스 기호 깨짐 방지
 
 # ===============================================
 # 1. CSV 불러오기 함수 (기존 코드와 동일)

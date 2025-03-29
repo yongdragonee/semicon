@@ -131,16 +131,27 @@ for name, ticker in stock_tickers.items():
             start=start_date_for_yf,
             end=end_date_for_yf
         )
-
-        if not stock_data.empty:
-            # 'Close' 열만 선택하여 차트 출력
-            close_data = stock_data[['Close']]
-            st.line_chart(close_data)
-
-            with st.expander("주가 데이터 펼쳐보기"):
-                st.dataframe(close_data)
-        else:
+        if stock_data.empty:
             st.warning(f"{name}의 해당 기간 주가 데이터가 없습니다.")
+            continue
+
+        # 컬럼이 MultiIndex인 경우 'Close' 레벨을 추출
+        if isinstance(stock_data.columns, pd.MultiIndex):
+            if 'Close' in stock_data.columns.levels[0]:
+                close_data = stock_data['Close']
+            else:
+                st.warning(f"{name}의 데이터에 'Close' 열이 없습니다.")
+                continue
+        else:
+            if 'Close' in stock_data.columns:
+                close_data = stock_data[['Close']]
+            else:
+                st.warning(f"{name}의 데이터에 'Close' 열이 없습니다.")
+                continue
+
+        st.line_chart(close_data)
+        with st.expander("주가 데이터 펼쳐보기"):
+            st.dataframe(close_data)
     except Exception as e:
         st.error(f"{name} 주가 데이터를 가져오는 중 오류가 발생했습니다: {e}")
 

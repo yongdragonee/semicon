@@ -165,7 +165,7 @@ with col1:
             ax2.tick_params(axis='y', labelcolor='red')
             lines1, labels1 = ax1.get_legend_handles_labels()
             lines2, labels2 = ax2.get_legend_handles_labels()
-            ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', fontproperties=fontprop)
+            ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left',prop=fontprop)
             ax1.set_title("코스피/코스닥 지수", fontproperties=fontprop)
             st.pyplot(fig)
     except Exception as e:
@@ -201,7 +201,7 @@ with col2:
             ax2.tick_params(axis='y', labelcolor='red')
             lines1, labels1 = ax1.get_legend_handles_labels()
             lines2, labels2 = ax2.get_legend_handles_labels()
-            ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', fontproperties=fontprop)
+            ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left',prop=fontprop)
             ax1.set_title("삼성전자 / SK하이닉스", fontproperties=fontprop)
             st.pyplot(fig)
     except Exception as e:

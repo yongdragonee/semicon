@@ -110,7 +110,7 @@ st.write(f"**총 기사 수:** {len(filtered_df)}개")
 # ===============================================
 st.header("📈 주가 정보 조회 (최근 1년)")
 today = datetime.date.today()
-start_date_for_yf = today - datetime.timedelta(days=366)
+start_date_for_yf = today - datetime.timedelta(days=370)
 end_date_for_yf = today + datetime.timedelta(days=1)
 col1, col2 = st.columns(2)
 

@@ -50,7 +50,7 @@ else:
 # ===============================================
 # 3. 화면 구성
 # ===============================================
-st.title("📢 반도체 뉴스레터(Rev.25.3.29)")
+st.subheader("📢 반도체 뉴스레터(Rev.25.3.29)")
 
 
 # ---- 사이드바 날짜 필터 옵션 ----
@@ -111,7 +111,7 @@ st.write(f"**총 기사 수:** {len(filtered_df)}개")
 # ===============================================
 # 5. 주가 정보 조회 - yfinance 사용 (최근 1년)
 # ===============================================
-st.header("📈 주가 정보 조회 (최근 1년)")
+st.header("📈 주가 현황")
 today = datetime.date.today()
 start_date_for_yf = today - datetime.timedelta(days=370)
 end_date_for_yf = today + datetime.timedelta(days=1)
@@ -327,7 +327,7 @@ except Exception as e:
     st.error(f"나스닥, 필라델피아 반도체, 마이크론 데이터를 가져오는 중 오류 발생: {e}")
 
 # ----- 전체 정규화 그래프: 코스닥 제외, 나스닥과 코스피는 점선으로 -----
-st.header("📈 전체 정규화 가격 비교 (1년 전 대비)")
+st.subheader("정규화 가격 비교 (1년 전 대비)")
 try:
     if ('close_left' in globals() or 'close_left' in locals()) and \
        ('close_right' in globals() or 'close_right' in locals()) and \

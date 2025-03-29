@@ -274,20 +274,21 @@ for ticker in ["코스피지수", "코스닥지수"]:
     if len(series) >= 2:
         pct_1d = (series.iloc[-1] / series.iloc[-2] - 1) * 100
     if len(series) > 0:
-        # 최신 날짜를 기준 날짜로 표기
-        기준날짜 = series.index[-1]
-        candidate7 = series[series.index <= 기준날짜 - pd.Timedelta(days=7)]
+        current_price = series.iloc[-1]
+        latest_date = series.index[-1]
+        date_label = latest_date.strftime('%m/%d')  # 예: "03/28"
+        candidate7 = series[series.index <= latest_date - pd.Timedelta(days=7)]
         if len(candidate7) > 0:
             pct_7d = (series.iloc[-1] / candidate7.iloc[-1] - 1) * 100
-        candidate30 = series[series.index <= 기준날짜 - pd.Timedelta(days=30)]
+        candidate30 = series[series.index <= latest_date - pd.Timedelta(days=30)]
         if len(candidate30) > 0:
             pct_30d = (series.iloc[-1] / candidate30.iloc[-1] - 1) * 100
-        candidate365 = series[series.index <= 기준날짜 - pd.Timedelta(days=365)]
+        candidate365 = series[series.index <= latest_date - pd.Timedelta(days=365)]
         if len(candidate365) > 0:
             pct_365d = (series.iloc[-1] / candidate365.iloc[-1] - 1) * 100
     left_data_list.append({
         "지수": ticker,
-        "기준 날짜": 기준날짜.strftime("%Y-%m-%d") if len(series) > 0 else "데이터 부족",
+        date_label: f"{current_price:.2f}" if len(series) > 0 else "데이터 부족",
         "최근1일": f"{pct_1d:.2f}%" if pct_1d is not None else "데이터 부족",
         "최근7일": f"{pct_7d:.2f}%" if pct_7d is not None else "데이터 부족",
         "최근1달": f"{pct_30d:.2f}%" if pct_30d is not None else "데이터 부족",
@@ -304,20 +305,21 @@ for ticker in ["삼성전자", "SK하이닉스"]:
     if len(series) >= 2:
         pct_1d = (series.iloc[-1] / series.iloc[-2] - 1) * 100
     if len(series) > 0:
-        # 최신 날짜를 기준 날짜로 표기
-        기준날짜 = series.index[-1]
-        candidate7 = series[series.index <= 기준날짜 - pd.Timedelta(days=7)]
+        current_price = series.iloc[-1]
+        latest_date = series.index[-1]
+        date_label = latest_date.strftime('%m/%d')  # 예: "03/28"
+        candidate7 = series[series.index <= latest_date - pd.Timedelta(days=7)]
         if len(candidate7) > 0:
             pct_7d = (series.iloc[-1] / candidate7.iloc[-1] - 1) * 100
-        candidate30 = series[series.index <= 기준날짜 - pd.Timedelta(days=30)]
+        candidate30 = series[series.index <= latest_date - pd.Timedelta(days=30)]
         if len(candidate30) > 0:
             pct_30d = (series.iloc[-1] / candidate30.iloc[-1] - 1) * 100
-        candidate365 = series[series.index <= 기준날짜 - pd.Timedelta(days=365)]
+        candidate365 = series[series.index <= latest_date - pd.Timedelta(days=365)]
         if len(candidate365) > 0:
             pct_365d = (series.iloc[-1] / candidate365.iloc[-1] - 1) * 100
     right_data_list.append({
         "종목": ticker,
-        "기준 날짜": 기준날짜.strftime("%Y-%m-%d") if len(series) > 0 else "데이터 부족",
+        date_label: f"{current_price:.2f}" if len(series) > 0 else "데이터 부족",
         "최근1일": f"{pct_1d:.2f}%" if pct_1d is not None else "데이터 부족",
         "최근7일": f"{pct_7d:.2f}%" if pct_7d is not None else "데이터 부족",
         "최근1달": f"{pct_30d:.2f}%" if pct_30d is not None else "데이터 부족",
@@ -325,6 +327,7 @@ for ticker in ["삼성전자", "SK하이닉스"]:
     })
 right_pct_df = pd.DataFrame(right_data_list)
 st.table(right_pct_df)
+
 
 
 # ===============================================

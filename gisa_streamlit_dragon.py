@@ -10,10 +10,6 @@ import platform
 # 한글 폰트 설정
 if platform.system() == 'Windows':
     plt.rcParams['font.family'] = 'Malgun Gothic'
-elif platform.system() == 'Darwin':  # MacOS
-    plt.rcParams['font.family'] = 'AppleGothic'
-else:  # Linux (예: 구글 코랩, 우분투 등)
-    plt.rcParams['font.family'] = 'NanumGothic'
 
 # 마이너스 깨짐 방지
 plt.rcParams['axes.unicode_minus'] = False

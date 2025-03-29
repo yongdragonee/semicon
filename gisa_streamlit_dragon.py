@@ -135,13 +135,18 @@ for name, ticker in stock_tickers.items():
             st.warning(f"{name}의 해당 기간 주가 데이터가 없습니다.")
             continue
 
-        # 만약 컬럼이 MultiIndex라면, 'Close' 추출
-        if isinstance(stock_data.columns, pd.MultiIndex):
-            if 'Close' in stock_data.columns.levels[0]:
-                close_data = stock_data['Close']
-            else:
+        # 컬럼이 튜플 형태인지 확인 (예: ("Close", "005930.KS"))
+        first_col = stock_data.columns[0]
+        if isinstance(first_col, tuple):
+            # 'Close'에 해당하는 튜플 컬럼 찾기
+            close_cols = [col for col in stock_data.columns if col[0] == 'Close']
+            if not close_cols:
                 st.warning(f"{name}의 데이터에 'Close' 열이 없습니다.")
                 continue
+            # 티커별로 저장된 경우 해당 티커에 맞는 컬럼 선택
+            close_cols_filtered = [col for col in close_cols if col[1] == ticker]
+            target_col = close_cols_filtered[0] if close_cols_filtered else close_cols[0]
+            close_data = stock_data[target_col].to_frame(name='Close')
         else:
             if 'Close' in stock_data.columns:
                 # 단일 티커의 경우, 'Close' 열만 선택 후 컬럼 이름 재정의

@@ -260,6 +260,11 @@ try:
 except Exception as e:
     st.error(f"정규화 그래프를 그리는 중 오류 발생: {e}")
 
+# ----- 나스닥, 필라델피아 반도체 지수, 마이크론 주가 정보 (최근 1년) -----
+st.header("📈 나스닥, 필라델피아 반도체, 마이크론 주가 정보 (최근 1년)")
+# 티커 설정: 나스닥(^IXIC), 필라델피아 반도체 지수(^SOX), 마이크론(MU)
+tickers_extra = {"나스닥": "^IXIC", "필라델피아 반도체": "^SOX", "마이크론": "MU"}
+extra_list = list(tickers_extra.values())
 
 try:
     extra_data = yf.download(extra_list, start=start_date_for_yf, end=end_date_for_yf)
@@ -347,11 +352,6 @@ try:
 except Exception as e:
     st.error(f"전체 정규화 그래프를 그리는 중 오류 발생: {e}")
 
-# ----- 나스닥, 필라델피아 반도체 지수, 마이크론 주가 정보 (최근 1년) -----
-st.header("📈 나스닥, 필라델피아 반도체, 마이크론 주가 정보 (최근 1년)")
-# 티커 설정: 나스닥(^IXIC), 필라델피아 반도체 지수(^SOX), 마이크론(MU)
-tickers_extra = {"나스닥": "^IXIC", "필라델피아 반도체": "^SOX", "마이크론": "MU"}
-extra_list = list(tickers_extra.values())
 
 
 # ===============================================

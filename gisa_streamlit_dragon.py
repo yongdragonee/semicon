@@ -132,26 +132,14 @@ if stock_ticker:
         if not stock_data.empty:
             st.subheader(f"최근 1년 주가 추이: {stock_ticker}")
 
-            # 1) 'Close' 행만 선택 (멀티 인덱스 튜플로 필터링)
-            stock_data2 = stock_data.loc[:, [("Close", "005930.KS")]]
-            
-            # 2) 이제 stock_data.columns == [('Close','005930.KS')]
-            stock_data2.columns = stock_data2.columns.droplevel(level=0)
-            # => ('Close','005930.KS') 가 '005930.KS'로 변환
+            # 단일 티커의 경우 'Close' 열만 선택하여 사용
+            close_series = stock_data['Close']
 
-            
-            # (1) Date 컬럼을 datetime으로 변환
-            stock_data2["Date"] = pd.to_datetime(stock_data2["Date"])
-            
-            # (2) Date를 인덱스로 설정
-            stock_data2.set_index("Date", inplace=True)
-            
-            # (3) 이제 st.line_chart(close_df)를 하면
-            #     X축: Date(인덱스), Y축: 005930.KS(종가)
-            st.line_chart(stock_data2)
+            # 이미 index가 날짜이므로 별도 처리 없이 차트를 그릴 수 있음
+            st.line_chart(close_series)
 
             with st.expander("주가 데이터 펼쳐보기"):
-                st.dataframe(stock_data2)
+                st.dataframe(stock_data)
         else:
             st.warning("해당 기간에 대한 주가 데이터가 없습니다.")
 

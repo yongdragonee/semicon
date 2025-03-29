@@ -131,10 +131,9 @@ if stock_ticker:
         if not stock_data.empty:
             st.subheader(f"최근 1년 주가 추이: {stock_ticker}")
 
-            # 'Close' 열만 선택하여 새로운 DataFrame 또는 Series 생성
-            close_data = stock_data[['Close']]  # 또는 stock_data['Close'] (Series 형태)
-            
-            # 차트 그리기
+            # 단일 티커의 경우, 'Close' 열만 선택
+            close_data = stock_data[['Close']]  # 또는 stock_data['Close']로 Series 형태로 사용
+
             st.line_chart(close_data)
 
             with st.expander("주가 데이터 펼쳐보기"):
@@ -144,6 +143,7 @@ if stock_ticker:
 
     except Exception as e:
         st.error(f"주가 데이터를 가져오는 중 오류가 발생했습니다: {e}")
+        
 # ===============================================
 # 6. 뉴스 출력
 # ===============================================

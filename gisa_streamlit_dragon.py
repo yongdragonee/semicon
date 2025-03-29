@@ -15,8 +15,6 @@ if not os.path.exists(font_path):
     urllib.request.urlretrieve(font_url, font_path)
 fontprop = fm.FontProperties(fname=font_path)
 
-
-
 # ===============================================
 # 1. CSV 불러오기 함수 (기존 코드와 동일)
 # ===============================================
@@ -246,6 +244,22 @@ right_pct_df = pd.DataFrame(right_data_list)
 styled_right_pct_df = right_pct_df.style.set_properties(**{'font-size': '11px'})
 st.dataframe(styled_right_pct_df)
 
+# ----- 정규화 그래프: 코스피, 코스닥, 삼성전자, SK하이닉스 -----
+st.header("📈 정규화 가격 비교: 코스피, 코스닥, 삼성전자, SK하이닉스")
+try:
+    # 좌측의 close_left와 우측의 close_right를 합침
+    combined_data = pd.concat([close_left, close_right], axis=1)
+    normalized_combined = combined_data.apply(lambda x: x / x.iloc[0] * 100)
+    fig, ax = plt.subplots(figsize=(8,4))
+    for col in normalized_combined.columns:
+        ax.plot(normalized_combined.index, normalized_combined[col], label=col)
+    ax.set_ylabel("정규화 가격 (Base 100)", fontproperties=fontprop)
+    ax.set_title("코스피, 코스닥, 삼성전자, SK하이닉스 정규화 가격 비교", fontproperties=fontprop)
+    ax.legend(prop=fontprop)
+    st.pyplot(fig)
+except Exception as e:
+    st.error(f"정규화 그래프를 그리는 중 오류 발생: {e}")
+
 # ----- 나스닥, 필라델피아 반도체 지수, 마이크론 주가 정보 (최근 1년) -----
 st.header("📈 나스닥, 필라델피아 반도체, 마이크론 주가 정보 (최근 1년)")
 # 티커 설정: 나스닥(^IXIC), 필라델피아 반도체 지수(^SOX), 마이크론(MU)
@@ -310,7 +324,6 @@ try:
         st.dataframe(styled_extra_pct_df)
 except Exception as e:
     st.error(f"나스닥, 필라델피아 반도체, 마이크론 데이터를 가져오는 중 오류 발생: {e}")
-
 
 # ===============================================
 # 6. 뉴스 출력

@@ -15,4 +15,3 @@ beautifulsoup4==4.13.1
 sentence-transformers
 yfinance
 matplotlib
-platform

@@ -113,7 +113,6 @@ st.write(f"**총 기사 수:** {len(filtered_df)}개")
 st.sidebar.write("---")
 st.sidebar.write("**📈 주가 정보 조회**")
 
-# 예: 삼성전자 코스피 티커 "005930.KS", TSMC "TSM", etc.
 stock_ticker = st.sidebar.text_input("티커 입력 (예: 005930.KS)", value="005930.KS")
 
 # 주가 데이터: 최근 1년 치로 고정
@@ -132,20 +131,19 @@ if stock_ticker:
         if not stock_data.empty:
             st.subheader(f"최근 1년 주가 추이: {stock_ticker}")
 
-            # 단일 티커의 경우 'Close' 열만 선택하여 사용
-            close_series = stock_data['Close']
-
-            # 이미 index가 날짜이므로 별도 처리 없이 차트를 그릴 수 있음
-            st.line_chart(close_series)
+            # 'Close' 열만 선택하여 새로운 DataFrame 또는 Series 생성
+            close_data = stock_data[['Close']]  # 또는 stock_data['Close'] (Series 형태)
+            
+            # 차트 그리기
+            st.line_chart(close_data)
 
             with st.expander("주가 데이터 펼쳐보기"):
-                st.dataframe(stock_data)
+                st.dataframe(close_data)
         else:
             st.warning("해당 기간에 대한 주가 데이터가 없습니다.")
 
     except Exception as e:
         st.error(f"주가 데이터를 가져오는 중 오류가 발생했습니다: {e}")
-
 # ===============================================
 # 6. 뉴스 출력
 # ===============================================

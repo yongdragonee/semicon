@@ -36,7 +36,7 @@ def load_data(csv_url):
 GITHUB_CSV_URL = st.secrets["CSV_URL"] + f"?nocache={int(time.time())}"
 df = load_data(GITHUB_CSV_URL)
 
-# 날짜 범위 초기값(최근 7일, 1달 등)
+# 날짜 범위 초기값 (최근 7일, 1달 등)
 if not df.empty:
     max_date = df['date'].max()
     one_week_ago = max_date - datetime.timedelta(days=7)
@@ -108,43 +108,68 @@ if search_query:
 st.write(f"**총 기사 수:** {len(filtered_df)}개")
 
 # ===============================================
-# 5. 주가 정보 조회 - yfinance 사용 (최근 1년, 통합 차트)
+# 5. 주가 정보 조회 - yfinance 사용 (최근 1년, 2개 그래프로 분리)
 # ===============================================
-st.header("📈 주가 정보 조회 (최근 1년) - 통합 차트")
-# 4개 주가: 코스피지수, 코스닥지수, 삼성전자, SK하이닉스
-stock_tickers = {
-    "코스피지수": "^KS11",
-    "코스닥지수": "^KQ11",
-    "삼성전자": "005930.KS",
-    "SK하이닉스": "000660.KS"
-}
+st.header("📈 주가 정보 조회 (최근 1년)")
 
 today = datetime.date.today()
 start_date_for_yf = today - datetime.timedelta(days=365)
 end_date_for_yf = today + datetime.timedelta(days=1)
 
-tickers = list(stock_tickers.values())
-try:
-    # 4개 티커를 한 번에 다운로드
-    all_data = yf.download(tickers, start=start_date_for_yf, end=end_date_for_yf)
-    if all_data.empty:
-        st.warning("해당 기간에 대한 주가 데이터가 없습니다.")
-    else:
-        # 멀티티커의 경우, 컬럼이 MultiIndex로 구성됨
-        if isinstance(all_data.columns, pd.MultiIndex):
-            close_data = all_data['Close']
+# 좌측: 코스피지수, 코스닥지수
+left_tickers = {
+    "코스피지수": "^KS11",
+    "코스닥지수": "^KQ11"
+}
+
+# 우측: 삼성전자, SK하이닉스
+right_tickers = {
+    "삼성전자": "005930.KS",
+    "SK하이닉스": "000660.KS"
+}
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("코스피/코스닥")
+    left_list = list(left_tickers.values())
+    try:
+        left_data = yf.download(left_list, start=start_date_for_yf, end=end_date_for_yf)
+        if left_data.empty:
+            st.warning("해당 기간에 대한 코스피/코스닥 데이터가 없습니다.")
         else:
-            close_data = all_data[['Close']]
-        
-        # 컬럼 이름을 티커에서 한글 이름으로 변경
-        ticker_map = {v: k for k, v in stock_tickers.items()}
-        close_data.rename(columns=ticker_map, inplace=True)
-        
-        st.line_chart(close_data)
-        with st.expander("주가 데이터 펼쳐보기"):
-            st.dataframe(close_data)
-except Exception as e:
-    st.error(f"통합 주가 데이터를 가져오는 중 오류가 발생했습니다: {e}")
+            if isinstance(left_data.columns, pd.MultiIndex):
+                close_left = left_data['Close']
+            else:
+                close_left = left_data[['Close']]
+            # 티커명을 한글로 변경
+            ticker_map_left = {v: k for k, v in left_tickers.items()}
+            close_left.rename(columns=ticker_map_left, inplace=True)
+            st.line_chart(close_left)
+            with st.expander("코스피/코스닥 데이터 펼쳐보기"):
+                st.dataframe(close_left)
+    except Exception as e:
+        st.error(f"코스피/코스닥 데이터를 가져오는 중 오류 발생: {e}")
+
+with col2:
+    st.subheader("삼성전자 / SK하이닉스")
+    right_list = list(right_tickers.values())
+    try:
+        right_data = yf.download(right_list, start=start_date_for_yf, end=end_date_for_yf)
+        if right_data.empty:
+            st.warning("해당 기간에 대한 삼성전자/SK하이닉스 데이터가 없습니다.")
+        else:
+            if isinstance(right_data.columns, pd.MultiIndex):
+                close_right = right_data['Close']
+            else:
+                close_right = right_data[['Close']]
+            ticker_map_right = {v: k for k, v in right_tickers.items()}
+            close_right.rename(columns=ticker_map_right, inplace=True)
+            st.line_chart(close_right)
+            with st.expander("삼성전자/SK하이닉스 데이터 펼쳐보기"):
+                st.dataframe(close_right)
+    except Exception as e:
+        st.error(f"삼성전자/SK하이닉스 데이터를 가져오는 중 오류 발생: {e}")
 
 # ===============================================
 # 6. 뉴스 출력

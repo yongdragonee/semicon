@@ -138,10 +138,18 @@ if stock_ticker:
             # 2) 이제 stock_data.columns == [('Close','005930.KS')]
             stock_data2.columns = stock_data2.columns.droplevel(level=0)
             # => ('Close','005930.KS') 가 '005930.KS'로 변환
+
             
-            # DataFrame 한 컬럼: columns == ['005930.KS']
+            # (1) Date 컬럼을 datetime으로 변환
+            stock_data2["Date"] = pd.to_datetime(stock_data2["Date"])
+            
+            # (2) Date를 인덱스로 설정
+            stock_data2.set_index("Date", inplace=True)
+            
+            # (3) 이제 st.line_chart(close_df)를 하면
+            #     X축: Date(인덱스), Y축: 005930.KS(종가)
             st.line_chart(stock_data2)
-                                    
+
             with st.expander("주가 데이터 펼쳐보기"):
                 st.dataframe(stock_data2)
         else:

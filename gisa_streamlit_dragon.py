@@ -263,7 +263,7 @@ st.dataframe(styled_right_pct_df)
 #     st.error(f"정규화 그래프를 그리는 중 오류 발생: {e}")
 
 # 티커 설정: 나스닥(^IXIC), 필라델피아 반도체 지수(^SOX), 마이크론(MU)
-tickers_extra = {"나스닥": "^IXIC", "필라델피아 반도체": "^SOX", "마이크론": "MU"}
+tickers_extra = {"나스닥": "^IXIC", "필라델피아": "^SOX", "마이크론": "MU"}
 extra_list = list(tickers_extra.values())
 
 try:

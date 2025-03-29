@@ -6,8 +6,11 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 
-font_list = fm.findSystemFonts(fontpaths = None, fontext = 'ttf')
-font_list[:]
+font_list = fm.findSystemFonts(fontext='ttf')
+
+for font_path in font_list:
+    if 'NanumGothic' in font_path:
+        print(font_path)
 
 # ===============================================
 # 1. CSV 불러오기 함수 (기존 코드와 동일)

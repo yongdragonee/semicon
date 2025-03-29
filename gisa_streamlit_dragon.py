@@ -104,7 +104,7 @@ if search_query:
 st.write(f"**총 기사 수:** {len(filtered_df)}개")
 
 # ===============================================
-# 5. 주가 정보 조회 - yfinance 사용 (최근 1년, Dual Y-Axis 그래프)
+# 5. 주가 정보 조회 - yfinance 사용 (최근 1년)
 # ===============================================
 st.header("📈 주가 정보 조회 (최근 1년)")
 today = datetime.date.today()
@@ -144,51 +144,6 @@ with col1:
             ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', prop=fontprop)
             ax1.set_title("코스피/코스닥 지수", fontproperties=fontprop)
             st.pyplot(fig)
-            
-            # ----- 코스피/코스닥 주가 변동률 계산 및 출력 -----
-            left_pct_changes = {}
-            for ticker in ["코스피지수", "코스닥지수"]:
-                # 데이터의 인덱스를 날짜순(오름차순)으로 정렬
-                series = close_left[ticker].dropna().sort_index()
-                changes = {}
-                # 최근 1일: 최신 거래일과 바로 전 거래일 비교 (라벨은 최신 거래일 날짜로 표시)
-                if len(series) >= 2:
-                    latest_date = series.index[-1]
-                    prev_date = series.index[-2]
-                    changes[f"최근1일 ({latest_date.strftime('%Y-%m-%d')})"] = (series.iloc[-1] / series.iloc[-2] - 1) * 100
-                else:
-                    changes["최근1일"] = None
-                # 최근 7일: 최신 거래일 기준 7일 전 이하의 가장 가까운 거래일
-                if len(series) > 0:
-                    latest_date = series.index[-1]
-                    candidate7 = series[series.index <= latest_date - pd.Timedelta(days=7)]
-                    if len(candidate7) > 0:
-                        changes["최근7일"] = (series.iloc[-1] / candidate7.iloc[-1] - 1) * 100
-                    else:
-                        changes["최근7일"] = None
-                    # 최근 1달: 30일 전 이하의 가장 가까운 거래일
-                    candidate30 = series[series.index <= latest_date - pd.Timedelta(days=30)]
-                    if len(candidate30) > 0:
-                        changes["최근1달"] = (series.iloc[-1] / candidate30.iloc[-1] - 1) * 100
-                    else:
-                        changes["최근1달"] = None
-                    # 최근 1년: 365일 전 이하의 가장 가까운 거래일
-                    candidate365 = series[series.index <= latest_date - pd.Timedelta(days=365)]
-                    if len(candidate365) > 0:
-                        changes["최근1년"] = (series.iloc[-1] / candidate365.iloc[-1] - 1) * 100
-                    else:
-                        changes["최근1년"] = None
-                else:
-                    changes["최근7일"] = changes["최근1달"] = changes["최근1년"] = None
-#                left_pct_changes[ticker] = changes
-#
-#            for ticker, changes in left_pct_changes.items():
-#                st.write(f"**{ticker} 주가 변동률**")
-#                for period, pct in changes.items():
-#                    if pct is not None:
-#                        st.write(f"- {period}: {pct:.2f}%")
-#                    else:
-#                        st.write(f"- {period}: 데이터 부족")
     except Exception as e:
         st.error(f"코스피/코스닥 데이터를 가져오는 중 오류 발생: {e}")
 
@@ -222,46 +177,6 @@ with col2:
             ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', prop=fontprop)
             ax1.set_title("삼성전자 / SK하이닉스", fontproperties=fontprop)
             st.pyplot(fig)
-            
-            right_pct_changes = {}
-            for ticker in ["삼성전자", "SK하이닉스"]:
-                series = close_right[ticker].dropna().sort_index()
-                changes = {}
-                if len(series) >= 2:
-                    latest_date = series.index[-1]
-                    prev_date = series.index[-2]
-                    changes[f"최근1일 ({latest_date.strftime('%Y-%m-%d')})"] = (series.iloc[-1] / series.iloc[-2] - 1) * 100
-                else:
-                    changes["최근1일"] = None
-                if len(series) > 0:
-                    latest_date = series.index[-1]
-                    candidate7 = series[series.index <= latest_date - pd.Timedelta(days=7)]
-                    if len(candidate7) > 0:
-                        changes["최근7일"] = (series.iloc[-1] / candidate7.iloc[-1] - 1) * 100
-                    else:
-                        changes["최근7일"] = None
-                    candidate30 = series[series.index <= latest_date - pd.Timedelta(days=30)]
-                    if len(candidate30) > 0:
-                        changes["최근1달"] = (series.iloc[-1] / candidate30.iloc[-1] - 1) * 100
-                    else:
-                        changes["최근1달"] = None
-                    candidate365 = series[series.index <= latest_date - pd.Timedelta(days=365)]
-                    if len(candidate365) > 0:
-                        changes["최근1년"] = (series.iloc[-1] / candidate365.iloc[-1] - 1) * 100
-                    else:
-                        changes["최근1년"] = None
-                else:
-                    changes["최근7일"] = changes["최근1달"] = changes["최근1년"] = None
-#                right_pct_changes[ticker] = changes
-#
-#            for ticker, changes in right_pct_changes.items():
-#                st.write(f"**{ticker} 주가 변동률**")
-#                for period, pct in changes.items():
-#                    if pct is not None:
-#                        st.write(f"- {period}: {pct:.1f}%")
-#                    else:
-#                        st.write(f"- {period}: 데이터 부족")
-
     except Exception as e:
         st.error(f"삼성전자/SK하이닉스 데이터를 가져오는 중 오류 발생: {e}")
 
@@ -275,7 +190,7 @@ for ticker in ["코스피지수", "코스닥지수"]:
     if len(series) > 0:
         current_price = series.iloc[-1]
         latest_date = series.index[-1]
-        date_label = latest_date.strftime('%m/%d')  # 예: "03/28"
+        date_label = latest_date.strftime('%m/%d')
         candidate7 = series[series.index <= latest_date - pd.Timedelta(days=7)]
         if len(candidate7) > 0:
             pct_7d = (series.iloc[-1] / candidate7.iloc[-1] - 1) * 100
@@ -294,10 +209,8 @@ for ticker in ["코스피지수", "코스닥지수"]:
         "-1Y": f"{pct_365d:.1f}%" if pct_365d is not None else "데이터 부족"
     })
 left_pct_df = pd.DataFrame(left_data_list)
-# Pandas Styler를 이용해 글씨 크기를 작게 설정 (예: 12px)
 styled_left_pct_df = left_pct_df.style.set_properties(**{'font-size': '11px'})
 st.dataframe(styled_left_pct_df)
-
 
 # ----- 삼성전자 / SK하이닉스 주가 변동률 계산 및 테이블 출력 -----
 right_data_list = []
@@ -309,7 +222,7 @@ for ticker in ["삼성전자", "SK하이닉스"]:
     if len(series) > 0:
         current_price = series.iloc[-1]
         latest_date = series.index[-1]
-        date_label = latest_date.strftime('%m/%d')  # 예: "03/28"
+        date_label = latest_date.strftime('%m/%d')
         candidate7 = series[series.index <= latest_date - pd.Timedelta(days=7)]
         if len(candidate7) > 0:
             pct_7d = (series.iloc[-1] / candidate7.iloc[-1] - 1) * 100
@@ -331,6 +244,70 @@ right_pct_df = pd.DataFrame(right_data_list)
 styled_right_pct_df = right_pct_df.style.set_properties(**{'font-size': '11px'})
 st.dataframe(styled_right_pct_df)
 
+# ----- 나스닥, 필라델피아 반도체 지수, 마이크론 주가 정보 (최근 1년) -----
+st.header("📈 나스닥, 필라델피아 반도체, 마이크론 주가 정보 (최근 1년)")
+# 티커 설정: 나스닥(^IXIC), 필라델피아 반도체 지수(^SOX), 마이크론(MU)
+tickers_extra = {"나스닥": "^IXIC", "필라델피아 반도체": "^SOX", "마이크론": "MU"}
+extra_list = list(tickers_extra.values())
+
+try:
+    extra_data = yf.download(extra_list, start=start_date_for_yf, end=end_date_for_yf)
+    if extra_data.empty:
+        st.warning("해당 기간에 대한 데이터를 가져올 수 없습니다.")
+    else:
+        if isinstance(extra_data.columns, pd.MultiIndex):
+            close_extra = extra_data['Close']
+        else:
+            close_extra = extra_data[['Close']]
+        # 티커명을 한글로 변경
+        ticker_map_extra = {v: k for k, v in tickers_extra.items()}
+        close_extra.rename(columns=ticker_map_extra, inplace=True)
+        
+        # 정규화: 각 종목의 첫 거래일 가격을 100으로 맞춰서 비교
+        normalized_extra = close_extra.apply(lambda x: x / x.iloc[0] * 100)
+        
+        # 정규화 차트 그리기
+        fig, ax = plt.subplots(figsize=(8,4))
+        for col in normalized_extra.columns:
+            ax.plot(normalized_extra.index, normalized_extra[col], label=col)
+        ax.set_ylabel("정규화 가격 (Base 100)", fontproperties=fontprop)
+        ax.set_title("나스닥, 필라델피아 반도체, 마이크론 (정규화 가격)", fontproperties=fontprop)
+        ax.legend(prop=fontprop)
+        st.pyplot(fig)
+        
+        # 각 종목별 변동률 계산 (최근 1일, 7일, 1달, 1년)
+        extra_data_list = []
+        for ticker_name in close_extra.columns:
+            series = close_extra[ticker_name].dropna().sort_index()
+            pct_1d = pct_7d = pct_30d = pct_365d = None
+            if len(series) >= 2:
+                pct_1d = (series.iloc[-1] / series.iloc[-2] - 1) * 100
+            if len(series) > 0:
+                current_price = series.iloc[-1]
+                latest_date = series.index[-1]
+                date_label = latest_date.strftime('%m/%d')
+                candidate7 = series[series.index <= latest_date - pd.Timedelta(days=7)]
+                if len(candidate7) > 0:
+                    pct_7d = (series.iloc[-1] / candidate7.iloc[-1] - 1) * 100
+                candidate30 = series[series.index <= latest_date - pd.Timedelta(days=30)]
+                if len(candidate30) > 0:
+                    pct_30d = (series.iloc[-1] / candidate30.iloc[-1] - 1) * 100
+                candidate365 = series[series.index <= latest_date - pd.Timedelta(days=365)]
+                if len(candidate365) > 0:
+                    pct_365d = (series.iloc[-1] / candidate365.iloc[-1] - 1) * 100
+            extra_data_list.append({
+                "종목": ticker_name,
+                date_label: f"{current_price:.2f}" if len(series) > 0 else "데이터 부족",
+                "-1D": f"{pct_1d:.2f}%" if pct_1d is not None else "데이터 부족",
+                "-1W": f"{pct_7d:.2f}%" if pct_7d is not None else "데이터 부족",
+                "-1M": f"{pct_30d:.2f}%" if pct_30d is not None else "데이터 부족",
+                "-1Y": f"{pct_365d:.2f}%" if pct_365d is not None else "데이터 부족"
+            })
+        extra_pct_df = pd.DataFrame(extra_data_list)
+        styled_extra_pct_df = extra_pct_df.style.set_properties(**{'font-size': '11px'})
+        st.dataframe(styled_extra_pct_df)
+except Exception as e:
+    st.error(f"나스닥, 필라델피아 반도체, 마이크론 데이터를 가져오는 중 오류 발생: {e}")
 
 # ===============================================
 # 6. 뉴스 출력

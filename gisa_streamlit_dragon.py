@@ -135,7 +135,7 @@ for name, ticker in stock_tickers.items():
             st.warning(f"{name}의 해당 기간 주가 데이터가 없습니다.")
             continue
 
-        # 컬럼이 MultiIndex인 경우 'Close' 레벨을 추출
+        # 만약 컬럼이 MultiIndex라면, 'Close' 추출
         if isinstance(stock_data.columns, pd.MultiIndex):
             if 'Close' in stock_data.columns.levels[0]:
                 close_data = stock_data['Close']
@@ -144,7 +144,9 @@ for name, ticker in stock_tickers.items():
                 continue
         else:
             if 'Close' in stock_data.columns:
+                # 단일 티커의 경우, 'Close' 열만 선택 후 컬럼 이름 재정의
                 close_data = stock_data[['Close']]
+                close_data.columns = ['Close']
             else:
                 st.warning(f"{name}의 데이터에 'Close' 열이 없습니다.")
                 continue

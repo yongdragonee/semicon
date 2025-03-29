@@ -62,7 +62,7 @@ else:
 # ===============================================
 # 3. 화면 구성
 # ===============================================
-st.title("📢 반도체 뉴스레터(Rev.25.3.13)")
+st.title("📢 반도체 뉴스레터(Rev.25.3.29)")
 st.write("문의/아이디어 : yh9003.lee@samsung.com")
 
 # ---- 사이드바 날짜 필터 옵션 ----
@@ -123,9 +123,9 @@ if search_query:
 st.write(f"**총 기사 수:** {len(filtered_df)}개")
 
 # ===============================================
-# 5. 주가 정보 조회 - yfinance 사용 (최근 1년, Dual Y-Axis 그래프)
+# 5. 주가 정보 조회 - yfinance 사용 (최근 1년)
 # ===============================================
-st.header("📈 주가 정보 조회 (최근 1년) - Dual Y-Axis 그래프")
+st.header("📈 주가 정보 조회 (최근 1년)")
 
 today = datetime.date.today()
 start_date_for_yf = today - datetime.timedelta(days=365)

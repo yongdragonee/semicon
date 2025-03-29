@@ -138,12 +138,15 @@ if stock_ticker:
             end=end_date_for_yf
         )
 
+        # 인덱스를 다시 한 번 DatetimeIndex로 확실하게 변환
+        stock_data.index = pd.to_datetime(stock_data.index, errors='coerce')
+
         if not stock_data.empty:
             st.subheader(f"주가 추이: {stock_ticker}")
             # 종가(Close) 기준 라인 차트
             st.line_chart(stock_data["Close"])
-            
-            # 원하는 경우, 데이터프레임 자체도 표시
+
+            # 주가 데이터프레임 자체 확인 가능
             with st.expander("주가 데이터 펼쳐보기"):
                 st.dataframe(stock_data)
         else:
@@ -151,6 +154,7 @@ if stock_ticker:
 
     except Exception as e:
         st.error(f"주가 데이터를 가져오는 중 오류가 발생했습니다: {e}")
+
 
 # ===============================================
 # 6. 뉴스 출력

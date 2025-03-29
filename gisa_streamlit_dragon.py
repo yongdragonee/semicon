@@ -4,9 +4,6 @@ import datetime
 import time
 import yfinance as yf
 import matplotlib.pyplot as plt
-from matplotlib import font_manager, rc
-import os
-
 
 
 # ===============================================

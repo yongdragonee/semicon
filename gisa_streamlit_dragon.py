@@ -7,13 +7,6 @@ import matplotlib.pyplot as plt
 from matplotlib import font_manager, rc
 import os
 
-# 현재 스크립트의 디렉토리 경로
-current_dir = os.path.dirname(os.path.abspath(__file__))
-font_path = os.path.join(current_dir, "NanumGothicCoding.ttf")
-
-# 폰트 설정
-font = font_manager.FontProperties(fname=font_path)
-rc('font', family=font.get_name())
 
 
 # ===============================================

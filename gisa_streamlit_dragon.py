@@ -132,11 +132,9 @@ if stock_ticker:
             st.subheader(f"최근 1년 주가 추이: {stock_ticker}")
 
             # 단일 티커의 경우, 'Close' 열만 선택
-            close_data = stock_data['Close']  # 또는 stock_data['Close']로 Series 형태로 사용
-
-            close_df = close_data.to_frame()
-            close_df.index = pd.to_datetime(close_df.index)
-            st.line_chart(close_df)
+            close_data = stock_data[['Close']]  # DataFrame으로 슬라이싱
+            close_data.columns = ['Close']
+            st.line_chart(close_data)
 
             with st.expander("주가 데이터 펼쳐보기"):
                 st.dataframe(close_data)

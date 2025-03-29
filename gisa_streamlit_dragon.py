@@ -325,6 +325,34 @@ try:
 except Exception as e:
     st.error(f"나스닥, 필라델피아 반도체, 마이크론 데이터를 가져오는 중 오류 발생: {e}")
 
+# ----- 전체 정규화 그래프: 코스피, 코스닥, 삼성전자, SK하이닉스, 나스닥, 필라델피아 반도체, 마이크론 -----
+st.header("📈 전체 정규화 가격 비교")
+
+try:
+    # domestic: 코스피/코스닥, 삼성전자, SK하이닉스는 이미 close_left와 close_right에 저장되어 있음
+    # 해외: 나스닥, 필라델피아 반도체, 마이크론은 close_extra에 저장되어 있음 (extra 데이터를 정상적으로 다운로드한 경우)
+    if ('close_left' in globals() or 'close_left' in locals()) and \
+       ('close_right' in globals() or 'close_right' in locals()) and \
+       ('close_extra' in globals() or 'close_extra' in locals()):
+        
+        # 두 개의 데이터프레임(국내와 해외)을 하나로 결합
+        all_data = pd.concat([close_left, close_right, close_extra], axis=1)
+        # 정규화: 각 종목의 첫 거래일 가격을 100으로 설정
+        normalized_all = all_data.apply(lambda x: x / x.iloc[0] * 100)
+        
+        fig, ax = plt.subplots(figsize=(10,6))
+        for col in normalized_all.columns:
+            ax.plot(normalized_all.index, normalized_all[col], label=col)
+        ax.set_ylabel("정규화 가격 (Base 100)", fontproperties=fontprop)
+        ax.set_title("전체 정규화 가격 비교", fontproperties=fontprop)
+        ax.legend(prop=fontprop)
+        st.pyplot(fig)
+    else:
+        st.warning("국내 또는 해외 주가 데이터가 누락되어 전체 정규화 그래프를 그릴 수 없습니다.")
+except Exception as e:
+    st.error(f"전체 정규화 그래프를 그리는 중 오류 발생: {e}")
+
+
 # ===============================================
 # 6. 뉴스 출력
 # ===============================================

@@ -5,14 +5,11 @@ import time
 import yfinance as yf
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
-import platform
+import os
 
-# 한글 폰트 설정
-if platform.system() == 'Windows':
-    plt.rcParams['font.family'] = 'Malgun Gothic'
-
-# 마이너스 깨짐 방지
-plt.rcParams['axes.unicode_minus'] = False
+# 폰트 경로 지정
+font_path = 'https://raw.githubusercontent.com/yongdragonee/semicon/main/NanumGothicCoding.ttf'  # 프로젝트 내에 포함한 경로
+fontprop = fm.FontProperties(fname=font_path)
 
 # ===============================================
 # 1. CSV 불러오기 함수 (기존 코드와 동일)

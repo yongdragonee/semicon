@@ -166,7 +166,7 @@ with col1:
             lines1, labels1 = ax1.get_legend_handles_labels()
             lines2, labels2 = ax2.get_legend_handles_labels()
             ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
-            ax1.set_title("코스피/코스닥 지수")
+            ax1.set_title("코스피/코스닥 지수", fontproperties=fontprop)
             st.pyplot(fig)
     except Exception as e:
         st.error(f"코스피/코스닥 데이터를 가져오는 중 오류 발생: {e}")
@@ -202,7 +202,7 @@ with col2:
             lines1, labels1 = ax1.get_legend_handles_labels()
             lines2, labels2 = ax2.get_legend_handles_labels()
             ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
-            ax1.set_title("삼성전자 / SK하이닉스")
+            ax1.set_title("삼성전자 / SK하이닉스", fontproperties=fontprop)
             st.pyplot(fig)
     except Exception as e:
         st.error(f"삼성전자/SK하이닉스 데이터를 가져오는 중 오류 발생: {e}")

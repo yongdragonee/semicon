@@ -4,10 +4,18 @@ import datetime
 import time
 import yfinance as yf
 import matplotlib.pyplot as plt
+from matplotlib import font_manager, rc
+import platform
 
-# 한글 폰트 설정 (Windows의 경우)
-plt.rcParams['font.family'] = 'Malgun Gothic'
-plt.rcParams['axes.unicode_minus'] = False  # 마이너스 기호 깨짐 방지
+# Google Fonts에 있는 나눔고딕 경로 예시
+font_url = "https://github.com/naver/nanumfont/blob/master/TTF/NanumGothic.ttf?raw=true"
+font_path = "/tmp/NanumGothic.ttf"
+
+import urllib.request
+urllib.request.urlretrieve(font_url, font_path)
+
+font_manager.fontManager.addfont(font_path)
+plt.rcParams['font.family'] = 'NanumGothic'
 
 # ===============================================
 # 1. CSV 불러오기 함수 (기존 코드와 동일)

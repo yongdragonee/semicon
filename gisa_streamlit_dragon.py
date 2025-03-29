@@ -15,6 +15,8 @@ if not os.path.exists(font_path):
     urllib.request.urlretrieve(font_url, font_path)
 fontprop = fm.FontProperties(fname=font_path)
 
+
+
 # ===============================================
 # 1. CSV 불러오기 함수 (기존 코드와 동일)
 # ===============================================
@@ -308,6 +310,18 @@ try:
         st.dataframe(styled_extra_pct_df)
 except Exception as e:
     st.error(f"나스닥, 필라델피아 반도체, 마이크론 데이터를 가져오는 중 오류 발생: {e}")
+
+# 디버깅용: 나스닥 데이터 미리보기
+nasdaq_data = yf.download("^IXIC", start=start_date_for_yf, end=end_date_for_yf)
+st.write("NASDAQ 데이터:", nasdaq_data.head())
+
+# 디버깅용: 필라델피아 반도체 지수 미리보기
+sox_data = yf.download("^SOX", start=start_date_for_yf, end=end_date_for_yf)
+st.write("필라델피아 반도체 데이터:", sox_data.head())
+
+# 디버깅용: 마이크론 데이터 미리보기
+mu_data = yf.download("MU", start=start_date_for_yf, end=end_date_for_yf)
+st.write("마이크론 데이터:", mu_data.head())
 
 # ===============================================
 # 6. 뉴스 출력

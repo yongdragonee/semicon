@@ -108,42 +108,42 @@ if search_query:
 st.write(f"**총 기사 수:** {len(filtered_df)}개")
 
 # ===============================================
-# 5. (추가) 주가 정보 조회 - yfinance 사용 (최근 1년)
+# 5. 주가 정보 조회 - yfinance 사용 (최근 1년)
 # ===============================================
-st.sidebar.write("---")
-st.sidebar.write("**📈 주가 정보 조회**")
+st.header("📈 주가 정보 조회 (최근 1년)")
+# 4개 주가: 코스피지수, 코스닥지수, 삼성전자, SK하이닉스
+stock_tickers = {
+    "코스피지수": "^KS11",
+    "코스닥지수": "^KQ11",
+    "삼성전자": "005930.KS",
+    "SK하이닉스": "000660.KS"
+}
 
-stock_ticker = st.sidebar.text_input("티커 입력 (예: 005930.KS)", value="005930.KS")
-
-# 주가 데이터: 최근 1년 치로 고정
 today = datetime.date.today()
 start_date_for_yf = today - datetime.timedelta(days=365)
 end_date_for_yf = today + datetime.timedelta(days=1)
 
-if stock_ticker:
+for name, ticker in stock_tickers.items():
+    st.subheader(f"{name} ({ticker})")
     try:
         stock_data = yf.download(
-            stock_ticker,
+            ticker,
             start=start_date_for_yf,
             end=end_date_for_yf
         )
 
         if not stock_data.empty:
-            st.subheader(f"최근 1년 주가 추이: {stock_ticker}")
-
-            # 단일 티커의 경우, 'Close' 열만 선택
-            close_data = stock_data[['Close']]  # DataFrame으로 슬라이싱
-            close_data.columns = ['Close']
+            # 'Close' 열만 선택하여 차트 출력
+            close_data = stock_data[['Close']]
             st.line_chart(close_data)
 
             with st.expander("주가 데이터 펼쳐보기"):
                 st.dataframe(close_data)
         else:
-            st.warning("해당 기간에 대한 주가 데이터가 없습니다.")
-
+            st.warning(f"{name}의 해당 기간 주가 데이터가 없습니다.")
     except Exception as e:
-        st.error(f"주가 데이터를 가져오는 중 오류가 발생했습니다: {e}")
-        
+        st.error(f"{name} 주가 데이터를 가져오는 중 오류가 발생했습니다: {e}")
+
 # ===============================================
 # 6. 뉴스 출력
 # ===============================================
@@ -151,7 +151,6 @@ grouped_by_date = filtered_df.groupby(filtered_df['date'].dt.date, sort=False)
 
 for current_date, date_group in grouped_by_date:
     st.markdown(f"## {current_date.strftime('%Y-%m-%d')}")
-
     grouped_by_keyword = date_group.groupby('키워드_목록', sort=False)
     
     for keyword_value, keyword_group in grouped_by_keyword:
@@ -163,7 +162,6 @@ for current_date, date_group in grouped_by_date:
         for idx, row in keyword_group.iterrows():
             with st.expander(f"📰 {row['title']}"):
                 st.write(f"**요약:** {row.get('summary', '요약 정보가 없습니다.')}")
-
                 link = row.get('link', None)
                 if pd.notna(link):
                     st.markdown(f"[🔗 기사 링크]({link})")

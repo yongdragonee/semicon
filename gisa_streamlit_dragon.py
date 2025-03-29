@@ -8,16 +8,6 @@ import matplotlib.font_manager as fm
 import os
 import urllib.request
 
-st.markdown("""
-    <style>
-    .compact-text p {
-        margin-top: 0.2em;
-        margin-bottom: 0.2em;
-        line-height: 1.2;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 # GitHub에서 폰트 파일 다운로드
 font_url = 'https://raw.githubusercontent.com/yongdragonee/semicon/main/NanumGothicCoding.ttf'
 font_path = './NanumGothicCoding.ttf'
@@ -271,7 +261,7 @@ with col2:
                         st.write(f"- {period}: {pct:.2f}%")
                     else:
                         st.write(f"- {period}: 데이터 부족")
-                st.markdown(f'<div class="compact-text">{"".join(lines)}</div>', unsafe_allow_html=True)
+
     except Exception as e:
         st.error(f"삼성전자/SK하이닉스 데이터를 가져오는 중 오류 발생: {e}")
 

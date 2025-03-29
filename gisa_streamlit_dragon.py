@@ -108,7 +108,7 @@ if search_query:
 st.write(f"**총 기사 수:** {len(filtered_df)}개")
 
 # ===============================================
-# 5. (추가) 주가 정보 조회 - yfinance 사용
+# 5. (추가) 주가 정보 조회 - yfinance 사용 (최근 1년)
 # ===============================================
 st.sidebar.write("---")
 st.sidebar.write("**📈 주가 정보 조회**")
@@ -116,37 +116,22 @@ st.sidebar.write("**📈 주가 정보 조회**")
 # 예: 삼성전자 코스피 티커 "005930.KS", TSMC "TSM", etc.
 stock_ticker = st.sidebar.text_input("티커 입력 (예: 005930.KS)", value="005930.KS")
 
-# 날짜 범위 (뉴스에서 선택된 날짜 범위를 참조할 수 있음)
-if selected_dates:
-    # 필터된 뉴스 중 가장 이른 날짜와 가장 최근 날짜
-    start_date = min(selected_dates)
-    end_date = max(selected_dates)
-else:
-    # 기본값 설정 (뉴스가 없으면)
-    start_date = datetime.date.today() - datetime.timedelta(days=30)
-    end_date = datetime.date.today()
+# 주가 데이터: 최근 1년 치로 고정
+today = datetime.date.today()
+start_date_for_yf = today - datetime.timedelta(days=365)
+end_date_for_yf = today + datetime.timedelta(days=1)
 
-# yfinance는 end_date를 "포함하지 않는" 방식이기 때문에 보통 +1일 정도 여유를 둡니다.
-end_date_for_yf = end_date + datetime.timedelta(days=1)
-
-# 주가 가져오기
 if stock_ticker:
     try:
         stock_data = yf.download(
             stock_ticker,
-            start=start_date,
+            start=start_date_for_yf,
             end=end_date_for_yf
         )
 
-        # 인덱스를 다시 한 번 DatetimeIndex로 확실하게 변환
-        stock_data.index = pd.to_datetime(stock_data.index, errors='coerce')
-
         if not stock_data.empty:
-            st.subheader(f"주가 추이: {stock_ticker}")
-            # 종가(Close) 기준 라인 차트
+            st.subheader(f"최근 1년 주가 추이: {stock_ticker}")
             st.line_chart(stock_data["Close"])
-
-            # 주가 데이터프레임 자체 확인 가능
             with st.expander("주가 데이터 펼쳐보기"):
                 st.dataframe(stock_data)
         else:
@@ -154,7 +139,6 @@ if stock_ticker:
 
     except Exception as e:
         st.error(f"주가 데이터를 가져오는 중 오류가 발생했습니다: {e}")
-
 
 # ===============================================
 # 6. 뉴스 출력

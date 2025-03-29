@@ -9,7 +9,7 @@ import matplotlib.font_manager as fm
 font_list = fm.findSystemFonts(fontext='ttf')
 
 for font in font_list:
-    print(font)
+    font
 
 # ===============================================
 # 1. CSV 불러오기 함수 (기존 코드와 동일)

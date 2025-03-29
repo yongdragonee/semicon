@@ -2,20 +2,19 @@ import streamlit as st
 import pandas as pd
 import datetime
 import time
+import yfinance as yf
 
-GITHUB_CSV_URL = st.secrets["CSV_URL"] + f"?nocache={int(time.time())}"
+# ===============================================
+# 1. CSV 불러오기 함수 (기존 코드와 동일)
+# ===============================================
+def load_data(csv_url):
+    df = pd.read_csv(csv_url, encoding='utf-8-sig')
     
-def load_data():
-    """CSV를 불러와 DataFrame으로 반환합니다."""
-    df = pd.read_csv(GITHUB_CSV_URL, encoding='utf-8-sig')
-    
-    # 1) 날짜 컬럼을 datetime 형식으로 변환
+    # 날짜 컬럼 변환 및 정렬
     df['date'] = pd.to_datetime(df['date'], errors='coerce')
-    
-    # 2) 내림차순 정렬 (가장 최근 기사가 위로)
     df = df.sort_values(by='date', ascending=False)
     
-    # 3) '키워드' 컬럼을 쉼표 기준으로 분할하여 리스트화
+    # 키워드 분할
     def split_keywords(kw_string):
         if pd.isna(kw_string):
             return []
@@ -23,20 +22,21 @@ def load_data():
     
     df['키워드_목록'] = df['키워드'].apply(split_keywords)
     
-    # 4) explode를 이용하여 키워드별로 레코드를 펼침
+    # explode
     df = df.explode('키워드_목록', ignore_index=True)
     
-    # 5) '관련 없음'을 '기타'로 변경
+    # '관련 없음' → '기타'
     df['키워드_목록'] = df['키워드_목록'].replace('관련 없음', '기타')
     
     return df
 
-# 데이터 불러오기
-df = load_data()
+# ===============================================
+# 2. 데이터 로드
+# ===============================================
+GITHUB_CSV_URL = st.secrets["CSV_URL"] + f"?nocache={int(time.time())}"
+df = load_data(GITHUB_CSV_URL)
 
-# ======================================================
-# 날짜 필터링을 위한 기본 데이터 준비
-# ======================================================
+# 날짜 범위 초기값(최근 7일, 1달 등)
 if not df.empty:
     max_date = df['date'].max()
     one_week_ago = max_date - datetime.timedelta(days=7)
@@ -44,30 +44,28 @@ if not df.empty:
 else:
     one_week_ago = one_month_ago = None
 
-# ======================================================
-# Streamlit 앱 타이틀
-# ======================================================
-st.title("📢반도체 뉴스레터(Rev.25.3.13)")
+# ===============================================
+# 3. 화면 구성
+# ===============================================
+st.title("📢 반도체 뉴스레터(Rev.25.3.13)")
 st.write("문의/아이디어 : yh9003.lee@samsung.com")
 
-# ======================================================
-# 사이드바 날짜 필터 옵션 추가
-# ======================================================
+# ---- 사이드바 날짜 필터 옵션 ----
 date_filter_option = st.sidebar.radio(
     "📅 날짜 필터 옵션",
     ["최근 7일", "최근 1달", "전체", "직접 선택"],
     index=0
 )
 
+# 날짜 리스트 준비
 unique_dates = sorted(list(set(df['date'].dt.date.dropna())), reverse=True)
 
-# 날짜 필터 옵션 적용
 if date_filter_option == "최근 7일":
-    selected_dates = [date for date in unique_dates if date >= one_week_ago.date()]
+    selected_dates = [d for d in unique_dates if d >= one_week_ago.date()]
 elif date_filter_option == "최근 1달":
-    selected_dates = [date for date in unique_dates if date >= one_month_ago.date()]
+    selected_dates = [d for d in unique_dates if d >= one_month_ago.date()]
 elif date_filter_option == "전체":
-    selected_dates = unique_dates  # 모든 날짜 포함
+    selected_dates = unique_dates
 else:  # "직접 선택"
     selected_dates = st.sidebar.multiselect(
         "📅 날짜를 선택하세요 (복수 선택 가능)",
@@ -75,51 +73,88 @@ else:  # "직접 선택"
         help="필터 옵션에서 '직접 선택'을 선택한 경우에만 활성화됩니다."
     )
 
-# ======================================================
-# 키워드 필터 추가 (카테고리 역할, '관련 없음' → '기타')
-# ======================================================
+# ---- 사이드바 키워드 필터 ----
 unique_keywords = sorted(list(df['키워드_목록'].dropna().unique()))
-
 selected_keywords = st.sidebar.multiselect(
     "🔍 키워드를 선택하세요 (복수 선택 가능)",
     unique_keywords,
     help="아무 것도 선택하지 않으면 모든 키워드가 표시됩니다."
 )
 
-# ======================================================
-# 검색어 필터 추가 (제목 및 요약 검색)
-# ======================================================
+# ---- 사이드바 검색어 필터 (제목/요약) ----
 search_query = st.sidebar.text_input(
     "🔎 검색어 입력 (제목/요약 포함)",
     help="특정 단어가 포함된 기사만 검색합니다."
 )
 
-# ======================================================
-# 필터 적용 (날짜 + 키워드 + 검색어)
-# ======================================================
+# ===============================================
+# 4. 뉴스 데이터 필터링
+# ===============================================
 filtered_df = df.copy()
 
-# 날짜 필터 적용
 if selected_dates:
     filtered_df = filtered_df[filtered_df['date'].dt.date.isin(selected_dates)]
 
-# 키워드 필터 적용
 if selected_keywords:
     filtered_df = filtered_df[filtered_df['키워드_목록'].isin(selected_keywords)]
 
-# 검색어 필터 적용 (제목 + 요약)
 if search_query:
-    search_query = search_query.lower()
+    search_query_lower = search_query.lower()
     filtered_df = filtered_df[
-        filtered_df['title'].str.lower().str.contains(search_query, na=False) |
-        filtered_df['summary'].fillna('').str.lower().str.contains(search_query, na=False)
+        filtered_df['title'].str.lower().str.contains(search_query_lower, na=False) |
+        filtered_df['summary'].fillna('').str.lower().str.contains(search_query_lower, na=False)
     ]
 
 st.write(f"**총 기사 수:** {len(filtered_df)}개")
 
-# ======================================================
-# 날짜별 → 키워드별 → 기사 목록 표시 (제목 클릭 시 요약 & 링크 표시)
-# ======================================================
+# ===============================================
+# 5. (추가) 주가 정보 조회 - yfinance 사용
+# ===============================================
+st.sidebar.write("---")
+st.sidebar.write("**📈 주가 정보 조회**")
+
+# 예: 삼성전자 코스피 티커 "005930.KS", TSMC "TSM", etc.
+stock_ticker = st.sidebar.text_input("티커 입력 (예: 005930.KS)", value="005930.KS")
+
+# 날짜 범위 (뉴스에서 선택된 날짜 범위를 참조할 수 있음)
+if selected_dates:
+    # 필터된 뉴스 중 가장 이른 날짜와 가장 최근 날짜
+    start_date = min(selected_dates)
+    end_date = max(selected_dates)
+else:
+    # 기본값 설정 (뉴스가 없으면)
+    start_date = datetime.date.today() - datetime.timedelta(days=30)
+    end_date = datetime.date.today()
+
+# yfinance는 end_date를 "포함하지 않는" 방식이기 때문에 보통 +1일 정도 여유를 둡니다.
+end_date_for_yf = end_date + datetime.timedelta(days=1)
+
+# 주가 가져오기
+if stock_ticker:
+    try:
+        stock_data = yf.download(
+            stock_ticker,
+            start=start_date,
+            end=end_date_for_yf
+        )
+
+        if not stock_data.empty:
+            st.subheader(f"주가 추이: {stock_ticker}")
+            # 종가(Close) 기준 라인 차트
+            st.line_chart(stock_data["Close"])
+            
+            # 원하는 경우, 데이터프레임 자체도 표시
+            with st.expander("주가 데이터 펼쳐보기"):
+                st.dataframe(stock_data)
+        else:
+            st.warning("해당 기간에 대한 주가 데이터가 없습니다.")
+
+    except Exception as e:
+        st.error(f"주가 데이터를 가져오는 중 오류가 발생했습니다: {e}")
+
+# ===============================================
+# 6. 뉴스 출력
+# ===============================================
 grouped_by_date = filtered_df.groupby(filtered_df['date'].dt.date, sort=False)
 
 for current_date, date_group in grouped_by_date:
@@ -134,10 +169,9 @@ for current_date, date_group in grouped_by_date:
             st.markdown("### ▶️ (키워드 없음)")
         
         for idx, row in keyword_group.iterrows():
-            # **제목을 클릭하면 요약 & 링크가 보이도록 변경**
             with st.expander(f"📰 {row['title']}"):
                 st.write(f"**요약:** {row.get('summary', '요약 정보가 없습니다.')}")
-                
+
                 link = row.get('link', None)
                 if pd.notna(link):
                     st.markdown(f"[🔗 기사 링크]({link})")

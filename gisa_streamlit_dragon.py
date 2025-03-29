@@ -48,8 +48,10 @@ else:
 # ===============================================
 # 3. 화면 구성
 # ===============================================
-st.title("📢 반도체 뉴스레터(Rev.25.3.13)")
+st.title("📢 반도체 뉴스레터(Rev.25.3.29)")
 st.write("문의/아이디어 : yh9003.lee@samsung.com")
+st.write("3/13 검색기능 추가")
+st.write("3/29 주가현황 추가")
 
 # ---- 사이드바 날짜 필터 옵션 ----
 date_filter_option = st.sidebar.radio(
@@ -104,9 +106,9 @@ st.write(f"**총 기사 수:** {len(filtered_df)}개")
 # ===============================================
 # 5. 주가 정보 조회 - yfinance 사용 (최근 1년, Dual Y-Axis 그래프)
 # ===============================================
-st.header("📈 주가 정보 조회 (최근 1년) - Dual Y-Axis 그래프")
+st.header("📈 주가 정보 조회 (최근 1년)")
 today = datetime.date.today()
-start_date_for_yf = today - datetime.timedelta(days=365)
+start_date_for_yf = today - datetime.timedelta(days=370)
 end_date_for_yf = today + datetime.timedelta(days=1)
 col1, col2 = st.columns(2)
 
@@ -144,7 +146,7 @@ with col1:
             st.pyplot(fig)
             
             # ----- 코스피/코스닥 주가 변동률 계산 및 출력 -----
-            st.markdown("#### 코스피/코스닥 주가 변동률")
+            st.markdown("#### 주가 변동률")
             left_pct_changes = {}
             for ticker in ["코스피지수", "코스닥지수"]:
                 # 데이터의 인덱스를 날짜순(오름차순)으로 정렬
@@ -222,7 +224,6 @@ with col2:
             ax1.set_title("삼성전자 / SK하이닉스", fontproperties=fontprop)
             st.pyplot(fig)
             
-            st.markdown("#### 삼성전자 / SK하이닉스 주가 변동률")
             right_pct_changes = {}
             for ticker in ["삼성전자", "SK하이닉스"]:
                 series = close_right[ticker].dropna().sort_index()

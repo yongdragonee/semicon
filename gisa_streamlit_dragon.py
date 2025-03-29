@@ -5,17 +5,16 @@ import time
 import yfinance as yf
 import matplotlib.pyplot as plt
 from matplotlib import font_manager, rc
-import platform
+import os
 
-# Google Fonts에 있는 나눔고딕 경로 예시
-font_url = "https://github.com/naver/nanumfont/blob/master/TTF/NanumGothic.ttf?raw=true"
-font_path = "/tmp/NanumGothic.ttf"
+# 현재 스크립트의 디렉토리 경로
+current_dir = os.path.dirname(os.path.abspath(__file__))
+font_path = os.path.join(current_dir, "NanumGothicCoding.ttf")
 
-import urllib.request
-urllib.request.urlretrieve(font_url, font_path)
+# 폰트 설정
+font = font_manager.FontProperties(fname=font_path)
+rc('font', family=font.get_name())
 
-font_manager.fontManager.addfont(font_path)
-plt.rcParams['font.family'] = 'NanumGothic'
 
 # ===============================================
 # 1. CSV 불러오기 함수 (기존 코드와 동일)

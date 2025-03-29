@@ -179,15 +179,15 @@ with col1:
                         changes["최근1년"] = None
                 else:
                     changes["최근7일"] = changes["최근1달"] = changes["최근1년"] = None
-                left_pct_changes[ticker] = changes
-
-            for ticker, changes in left_pct_changes.items():
-                st.write(f"**{ticker} 주가 변동률**")
-                for period, pct in changes.items():
-                    if pct is not None:
-                        st.write(f"- {period}: {pct:.2f}%")
-                    else:
-                        st.write(f"- {period}: 데이터 부족")
+#                left_pct_changes[ticker] = changes
+#
+#            for ticker, changes in left_pct_changes.items():
+#                st.write(f"**{ticker} 주가 변동률**")
+#                for period, pct in changes.items():
+#                    if pct is not None:
+#                        st.write(f"- {period}: {pct:.2f}%")
+#                    else:
+#                        st.write(f"- {period}: 데이터 부족")
     except Exception as e:
         st.error(f"코스피/코스닥 데이터를 가져오는 중 오류 발생: {e}")
 
@@ -252,15 +252,15 @@ with col2:
                         changes["최근1년"] = None
                 else:
                     changes["최근7일"] = changes["최근1달"] = changes["최근1년"] = None
-                right_pct_changes[ticker] = changes
-
-            for ticker, changes in right_pct_changes.items():
-                st.write(f"**{ticker} 주가 변동률**")
-                for period, pct in changes.items():
-                    if pct is not None:
-                        st.write(f"- {period}: {pct:.2f}%")
-                    else:
-                        st.write(f"- {period}: 데이터 부족")
+#                right_pct_changes[ticker] = changes
+#
+#            for ticker, changes in right_pct_changes.items():
+#                st.write(f"**{ticker} 주가 변동률**")
+#                for period, pct in changes.items():
+#                    if pct is not None:
+#                        st.write(f"- {period}: {pct:.2f}%")
+#                    else:
+#                        st.write(f"- {period}: 데이터 부족")
 
     except Exception as e:
         st.error(f"삼성전자/SK하이닉스 데이터를 가져오는 중 오류 발생: {e}")

@@ -244,10 +244,10 @@ right_pct_df = pd.DataFrame(right_data_list)
 styled_right_pct_df = right_pct_df.style.set_properties(**{'font-size': '11px'})
 st.dataframe(styled_right_pct_df)
 
-# ----- 정규화 그래프: 코스피, 코스닥, 삼성전자, SK하이닉스 -----
+# ----- [주석 처리] 개별 정규화 그래프: 코스피, 코스닥, 삼성전자, SK하이닉스 ----- 
+"""
 st.header("📈 정규화 가격 비교: 코스피, 코스닥, 삼성전자, SK하이닉스")
 try:
-    # 좌측의 close_left와 우측의 close_right를 합침
     combined_data = pd.concat([close_left, close_right], axis=1)
     normalized_combined = combined_data.apply(lambda x: x / x.iloc[0] * 100)
     fig, ax = plt.subplots(figsize=(8,4))
@@ -259,10 +259,11 @@ try:
     st.pyplot(fig)
 except Exception as e:
     st.error(f"정규화 그래프를 그리는 중 오류 발생: {e}")
+"""
 
-# ----- 나스닥, 필라델피아 반도체 지수, 마이크론 주가 정보 (최근 1년) -----
+# ----- [주석 처리] 개별 정규화 그래프: 나스닥, 필라델피아 반도체, 마이크론 ----- 
+"""
 st.header("📈 나스닥, 필라델피아 반도체, 마이크론 주가 정보 (최근 1년)")
-# 티커 설정: 나스닥(^IXIC), 필라델피아 반도체 지수(^SOX), 마이크론(MU)
 tickers_extra = {"나스닥": "^IXIC", "필라델피아 반도체": "^SOX", "마이크론": "MU"}
 extra_list = list(tickers_extra.values())
 
@@ -275,11 +276,9 @@ try:
             close_extra = extra_data['Close']
         else:
             close_extra = extra_data[['Close']]
-        # 티커명을 한글로 변경
         ticker_map_extra = {v: k for k, v in tickers_extra.items()}
         close_extra.rename(columns=ticker_map_extra, inplace=True)
         
-        # 정규화: 각 종목의 첫 거래일 가격을 100으로 맞춰서 비교
         normalized_extra = close_extra.apply(lambda x: x / x.iloc[0] * 100)
         
         # 정규화 차트 그리기
@@ -291,7 +290,7 @@ try:
         ax.legend(prop=fontprop)
         st.pyplot(fig)
         
-        # 각 종목별 변동률 계산 (최근 1일, 7일, 1달, 1년)
+        # 변동률 계산 및 테이블 출력은 유지
         extra_data_list = []
         for ticker_name in close_extra.columns:
             series = close_extra[ticker_name].dropna().sort_index()
@@ -324,20 +323,18 @@ try:
         st.dataframe(styled_extra_pct_df)
 except Exception as e:
     st.error(f"나스닥, 필라델피아 반도체, 마이크론 데이터를 가져오는 중 오류 발생: {e}")
+"""
 
 # ----- 전체 정규화 그래프: 코스피, 코스닥, 삼성전자, SK하이닉스, 나스닥, 필라델피아 반도체, 마이크론 -----
 st.header("📈 전체 정규화 가격 비교")
 
 try:
-    # domestic: 코스피/코스닥, 삼성전자, SK하이닉스는 이미 close_left와 close_right에 저장되어 있음
-    # 해외: 나스닥, 필라델피아 반도체, 마이크론은 close_extra에 저장되어 있음 (extra 데이터를 정상적으로 다운로드한 경우)
+    # 국내: close_left, close_right / 해외: close_extra (개별 정규화 그래프는 주석 처리되었으므로, 해당 데이터는 그대로 사용)
     if ('close_left' in globals() or 'close_left' in locals()) and \
        ('close_right' in globals() or 'close_right' in locals()) and \
        ('close_extra' in globals() or 'close_extra' in locals()):
         
-        # 두 개의 데이터프레임(국내와 해외)을 하나로 결합
         all_data = pd.concat([close_left, close_right, close_extra], axis=1)
-        # 정규화: 각 종목의 첫 거래일 가격을 100으로 설정
         normalized_all = all_data.apply(lambda x: x / x.iloc[0] * 100)
         
         fig, ax = plt.subplots(figsize=(10,6))
@@ -351,8 +348,6 @@ try:
         st.warning("국내 또는 해외 주가 데이터가 누락되어 전체 정규화 그래프를 그릴 수 없습니다.")
 except Exception as e:
     st.error(f"전체 정규화 그래프를 그리는 중 오류 발생: {e}")
-
-
 
 # ===============================================
 # 6. 뉴스 출력

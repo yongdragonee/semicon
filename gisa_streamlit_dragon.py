@@ -117,7 +117,7 @@ col1, col2 = st.columns(2)
 # 좌측: 코스피지수 / 코스닥지수 (Dual Y-Axis)
 with col1:
     st.subheader("코스피/코스닥")
-    left_tickers = {"코스피지수": "^KS11", "코스닥지수": "^KQ11"}
+    left_tickers = {"코스피": "^KS11", "코스닥": "^KQ11"}
     left_list = list(left_tickers.values())
     try:
         left_data = yf.download(left_list, start=start_date_for_yf, end=end_date_for_yf)
@@ -134,12 +134,12 @@ with col1:
             
             # dual y-axis 플롯 생성
             fig, ax1 = plt.subplots(figsize=(8,4))
-            ax1.plot(close_left.index, close_left["코스피지수"], color='blue', label="코스피지수")
-            ax1.set_ylabel("코스피지수", color='blue', fontproperties=fontprop)
+            ax1.plot(close_left.index, close_left["코스피"], color='blue', label="코스피")
+            ax1.set_ylabel("코스피", color='blue', fontproperties=fontprop)
             ax1.tick_params(axis='y', labelcolor='blue')
             ax2 = ax1.twinx()
-            ax2.plot(close_left.index, close_left["코스닥지수"], color='red', label="코스닥지수")
-            ax2.set_ylabel("코스닥지수", color='red', fontproperties=fontprop)
+            ax2.plot(close_left.index, close_left["코스닥"], color='red', label="코스닥")
+            ax2.set_ylabel("코스닥", color='red', fontproperties=fontprop)
             ax2.tick_params(axis='y', labelcolor='red')
             lines1, labels1 = ax1.get_legend_handles_labels()
             lines2, labels2 = ax2.get_legend_handles_labels()
@@ -184,7 +184,7 @@ with col2:
 
 # ----- 코스피/코스닥 주가 변동률 계산 및 테이블 출력 -----
 left_data_list = []
-for ticker in ["코스피지수", "코스닥지수"]:
+for ticker in ["코스피", "코스닥"]:
     series = close_left[ticker].dropna().sort_index()
     pct_1d = pct_7d = pct_30d = pct_365d = None
     if len(series) >= 2:
@@ -323,17 +323,15 @@ try:
 except Exception as e:
     st.error(f"나스닥, 필라델피아 반도체, 마이크론 데이터를 가져오는 중 오류 발생: {e}")
 
-# ----- 전체 정규화 그래프: 코스피, 코스닥, 삼성전자, SK하이닉스, 나스닥, 필라델피아 반도체, 마이크론 -----
+# ----- 전체 정규화 그래프: 코스닥 제외, 나스닥과 코스피는 점선으로 -----
 st.header("📈 전체 정규화 가격 비교")
 try:
-    # domestic: 코스피/코스닥, 삼성전자, SK하이닉스는 이미 close_left와 close_right에 저장
-    # 해외: 나스닥, 필라델피아 반도체, 마이크론은 close_extra에 저장
     if ('close_left' in globals() or 'close_left' in locals()) and \
        ('close_right' in globals() or 'close_right' in locals()) and \
        ('close_extra' in globals() or 'close_extra' in locals()):
         
         # 코스닥만 제거한 데이터프레임 만들기
-        close_left_without_kosdaq = close_left.drop(columns=["코스닥지수"], errors="ignore")
+        close_left_without_kosdaq = close_left.drop(columns=["코스닥"], errors="ignore")
         
         # 국내 + 해외 주가 데이터(코스닥 제외)를 합침
         all_data = pd.concat([close_left_without_kosdaq, close_right, close_extra], axis=1)
@@ -342,17 +340,23 @@ try:
         normalized_all = all_data.apply(lambda x: x / x.iloc[0] * 100)
         
         fig, ax = plt.subplots(figsize=(10,6))
+        
+        # 나스닥과 코스피만 점선으로 표시하기 위해 조건 분기
         for col in normalized_all.columns:
-            ax.plot(normalized_all.index, normalized_all[col], label=col)
+            if col in ["나스닥", "코스피", "필라델피아"]:
+                ax.plot(normalized_all.index, normalized_all[col], label=col, linestyle="--")
+            else:
+                ax.plot(normalized_all.index, normalized_all[col], label=col, linestyle="-")
+        
         ax.set_ylabel("정규화 가격 (Base 100)", fontproperties=fontprop)
-        ax.set_title("전체 정규화 가격 비교 (코스닥 제외)", fontproperties=fontprop)
+        ax.set_title("전체 정규화 가격 비교 (코스닥 제외, 나스닥/코스피 점선)", fontproperties=fontprop)
         ax.legend(prop=fontprop)
         st.pyplot(fig)
-
     else:
         st.warning("국내 또는 해외 주가 데이터가 누락되어 전체 정규화 그래프를 그릴 수 없습니다.")
 except Exception as e:
     st.error(f"전체 정규화 그래프를 그리는 중 오류 발생: {e}")
+
 
 # ===============================================
 # 6. 뉴스 출력

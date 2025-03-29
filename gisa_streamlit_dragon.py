@@ -106,7 +106,7 @@ st.write(f"**총 기사 수:** {len(filtered_df)}개")
 # ===============================================
 st.header("📈 주가 정보 조회 (최근 1년) - Dual Y-Axis 그래프")
 today = datetime.date.today()
-start_date_for_yf = today - datetime.timedelta(days=370)
+start_date_for_yf = today - datetime.timedelta(days=365)
 end_date_for_yf = today + datetime.timedelta(days=1)
 col1, col2 = st.columns(2)
 
@@ -150,11 +150,11 @@ with col1:
                 # 데이터의 인덱스를 날짜순(오름차순)으로 정렬
                 series = close_left[ticker].dropna().sort_index()
                 changes = {}
-                # 최근 1일: 바로 이전 거래일 (데이터상에서 마지막 전 거래일)
+                # 최근 1일: 최신 거래일과 바로 전 거래일 비교 (라벨은 최신 거래일 날짜로 표시)
                 if len(series) >= 2:
                     latest_date = series.index[-1]
                     prev_date = series.index[-2]
-                    changes[f"최근1일 ({prev_date.strftime('%Y-%m-%d')})"] = (series.iloc[-1] / series.iloc[-2] - 1) * 100
+                    changes[f"최근1일 ({latest_date.strftime('%Y-%m-%d')})"] = (series.iloc[-1] / series.iloc[-2] - 1) * 100
                 else:
                     changes["최근1일"] = None
                 # 최근 7일: 최신 거래일 기준 7일 전 이하의 가장 가까운 거래일
@@ -230,7 +230,7 @@ with col2:
                 if len(series) >= 2:
                     latest_date = series.index[-1]
                     prev_date = series.index[-2]
-                    changes[f"최근1일 ({prev_date.strftime('%Y-%m-%d')})"] = (series.iloc[-1] / series.iloc[-2] - 1) * 100
+                    changes[f"최근1일 ({latest_date.strftime('%Y-%m-%d')})"] = (series.iloc[-1] / series.iloc[-2] - 1) * 100
                 else:
                     changes["최근1일"] = None
                 if len(series) > 0:

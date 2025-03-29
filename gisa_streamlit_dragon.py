@@ -131,7 +131,8 @@ if stock_ticker:
 
         if not stock_data.empty:
             st.subheader(f"최근 1년 주가 추이: {stock_ticker}")
-            st.line_chart(stock_data[("Close","005930.KS")])
+            close_only = stock_data[[col for col in stock_data.columns if "Close" in col]]
+            st.line_chart(close_only)
             with st.expander("주가 데이터 펼쳐보기"):
                 st.dataframe(stock_data)
         else:

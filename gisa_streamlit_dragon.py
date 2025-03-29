@@ -311,11 +311,6 @@ try:
 except Exception as e:
     st.error(f"나스닥, 필라델피아 반도체, 마이크론 데이터를 가져오는 중 오류 발생: {e}")
 
-try:
-    nasdaq_data = yf.download("^IXIC", start=start_date_for_yf, end=end_date_for_yf)
-    st.write("NASDAQ 데이터:", nasdaq_data.head())
-except Exception as e:
-    st.error(f"NASDAQ 데이터를 가져오는 중 오류 발생: {e}")
 
 # ===============================================
 # 6. 뉴스 출력

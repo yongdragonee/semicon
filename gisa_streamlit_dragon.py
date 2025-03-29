@@ -132,7 +132,7 @@ if stock_ticker:
             st.subheader(f"최근 1년 주가 추이: {stock_ticker}")
 
             # 단일 티커의 경우, 'Close' 열만 선택
-            close_data = stock_data[['Close']]  # 또는 stock_data['Close']로 Series 형태로 사용
+            close_data = stock_data['Close']  # 또는 stock_data['Close']로 Series 형태로 사용
 
             st.line_chart(close_data)
 

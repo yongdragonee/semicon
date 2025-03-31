@@ -185,6 +185,23 @@ with col2:
     except Exception as e:
         st.error(f"삼성전자/SK하이닉스 데이터를 가져오는 중 오류 발생: {e}")
 
+# ----- 1일 기준(1d) 삼성전자와 SK하이닉스 주가 정보 출력 -----
+if 'close_right' in globals():
+    st.write("**1일 기준 주가 정보 (삼성전자 / SK하이닉스)**")
+    for ticker in ["삼성전자", "SK하이닉스"]:
+        series = close_right[ticker].dropna().sort_index()
+        if len(series) >= 2:
+            # 기준 날짜는 최신 거래일
+            base_date = series.index[-1].strftime('%Y-%m-%d')
+            current_price = series.iloc[-1]
+            previous_price = series.iloc[-2]
+            pct_1d = (current_price / previous_price - 1) * 100
+            st.write(f"1d 기준 날짜: {base_date} | {ticker}: {current_price:.0f} / {pct_1d:.1f}%")
+        else:
+            st.write(f"{ticker}: 데이터 부족")
+else:
+    st.write("삼성전자/SK하이닉스 데이터가 없습니다.")
+
 # ----- 코스피/코스닥 주가 변동률 계산 및 테이블 출력 -----
 left_data_list = []
 for ticker in ["코스피", "코스닥"]:

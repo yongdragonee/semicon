@@ -272,20 +272,19 @@ with st.expander("주가 변동률 표 보기", expanded=False):
 # ----- 전체 정규화 그래프 (코스닥 제외, 나스닥과 코스피는 점선) -----
 with st.expander("전체 정규화 그래프 (1년 전 대비) 보기", expanded=False):
     try:
-        if ('close_left' in globals() or 'close_left' in locals()) and \
-           ('close_right' in globals() or 'close_right' in locals()) and \
-           ('close_extra' in globals() or 'close_extra' in locals()):
-           
-            # 코스닥을 제외한 코스피 데이터
-            close_left_without_kosdaq = close_left.drop(columns=["코스닥"], errors="ignore")
+        available_data = []
+        if 'close_left' in globals() or 'close_left' in locals():
+            # 코스닥 제외한 코스피 데이터
+            available_data.append(close_left.drop(columns=["코스닥"], errors="ignore"))
+        if 'close_right' in globals() or 'close_right' in locals():
+            available_data.append(close_right)
+        if 'close_extra' in globals() or 'close_extra' in locals():
+            available_data.append(close_extra)
             
-            # 국내 + 해외 주가 데이터(코스닥 제외)를 하나로 합침
-            all_data = pd.concat([close_left_without_kosdaq, close_right, close_extra], axis=1)
-            all_data = all_data.sort_index()
-            
+        if available_data:
+            all_data = pd.concat(available_data, axis=1).sort_index()
             # 전체에서 가장 최신 날짜(end_date) 구하기
             end_date = all_data.dropna(how='all').index.max()
-            
             # base_date = end_date - 365일
             base_date = end_date - pd.Timedelta(days=365)
             

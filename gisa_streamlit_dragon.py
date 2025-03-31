@@ -313,8 +313,6 @@ with st.expander("주가 변동률 표 보기", expanded=False):
     except Exception as e:
         st.error(f"나스닥, 필라델피아, 마이크론 데이터를 가져오는 중 오류 발생: {e}")
 
-# ----- 전체 정규화 그래프를 expander로 감싸기 -----
-with st.expander("전체 정규화 그래프 (1년 전 대비) 보기", expanded=False):
     try:
         if ('close_left' in globals() or 'close_left' in locals()) and \
            ('close_right' in globals() or 'close_right' in locals()) and \

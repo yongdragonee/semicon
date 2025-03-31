@@ -119,7 +119,7 @@ col1, col2 = st.columns(2)
 
 # 좌측: 코스피지수 / 코스닥지수 (Dual Y-Axis)
 with col1:
-    st.subheader("코스피/코스닥")
+    #st.subheader("코스피/코스닥")
     left_tickers = {"코스피": "^KS11", "코스닥": "^KQ11"}
     left_list = list(left_tickers.values())
     try:
@@ -147,14 +147,14 @@ with col1:
             lines1, labels1 = ax1.get_legend_handles_labels()
             lines2, labels2 = ax2.get_legend_handles_labels()
             ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', prop=fontprop)
-            ax1.set_title("코스피/코스닥 지수", fontproperties=fontprop)
+            ax1.set_title("코스피/코스닥 지수", fontproperties=fontprop,fontsize=16)
             st.pyplot(fig)
     except Exception as e:
         st.error(f"코스피/코스닥 데이터를 가져오는 중 오류 발생: {e}")
 
 # 우측: 삼성전자 / SK하이닉스 (Dual Y-Axis)
 with col2:
-    st.subheader("삼성전자 / SK하이닉스")
+    #st.subheader("삼성전자 / SK하이닉스")
     right_tickers = {"삼성전자": "005930.KS", "SK하이닉스": "000660.KS"}
     right_list = list(right_tickers.values())
     try:
@@ -180,7 +180,7 @@ with col2:
             lines1, labels1 = ax1.get_legend_handles_labels()
             lines2, labels2 = ax2.get_legend_handles_labels()
             ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', prop=fontprop)
-            ax1.set_title("삼성전자 / SK하이닉스", fontproperties=fontprop)
+            ax1.set_title("삼성전자 / SK하이닉스", fontproperties=fontprop,fontsize=16)
             st.pyplot(fig)
     except Exception as e:
         st.error(f"삼성전자/SK하이닉스 데이터를 가져오는 중 오류 발생: {e}")

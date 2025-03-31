@@ -202,7 +202,7 @@ if 'close_right' in globals():
 else:
     st.write("삼성전자/SK하이닉스 데이터가 없습니다.")
 
-# ----- 주가 변동률 표 (코스피/코스닥, 삼성전자/SK하이닉스) -----
+# ----- 주가 변동률 표 (모든 종목: 코스피/코스닥, 삼성전자/SK하이닉스, 나스닥/필라델피아/마이크론)를 expander로 감싸기 -----
 with st.expander("주가 변동률 표 보기", expanded=False):
     # 코스피/코스닥 주가 변동률 계산
     left_data_list = []
@@ -262,29 +262,75 @@ with st.expander("주가 변동률 표 보기", expanded=False):
             "-1M": f"{pct_30d:.1f}%" if pct_30d is not None else "데이터 부족",
             "-1Y": f"{pct_365d:.1f}%" if pct_365d is not None else "데이터 부족"
         })
-    right_pct_df = pd.DataFrame(right_data_list)
-    
-    # 두 표 결합 (코스피/코스닥의 "지수"를 "종목"으로 변경 후 결합)
+    # 두 표 결합 (코스피/코스닥의 "지수" 열을 "종목"으로 변경 후 결합)
     left_pct_df_renamed = left_pct_df.rename(columns={"지수": "종목"})
-    combined_pct_df = pd.concat([left_pct_df_renamed, right_pct_df], axis=0, ignore_index=True)
+    combined_pct_df = pd.concat([left_pct_df_renamed, pd.DataFrame(right_data_list)], axis=0, ignore_index=True)
+    
+    # 나스닥, 필라델피아, 마이크론 주가 변동률 계산
+    tickers_extra = {"나스닥": "^IXIC", "필라델피아": "^SOX", "마이크론": "MU"}
+    extra_list = list(tickers_extra.values())
+    try:
+        extra_data = yf.download(extra_list, start=start_date_for_yf, end=end_date_for_yf)
+        if not extra_data.empty:
+            if isinstance(extra_data.columns, pd.MultiIndex):
+                close_extra = extra_data['Close']
+            else:
+                close_extra = extra_data[['Close']]
+            ticker_map_extra = {v: k for k, v in tickers_extra.items()}
+            close_extra.rename(columns=ticker_map_extra, inplace=True)
+            
+            extra_data_list = []
+            for ticker_name in close_extra.columns:
+                series = close_extra[ticker_name].dropna().sort_index()
+                pct_1d = pct_7d = pct_30d = pct_365d = None
+                if len(series) >= 2:
+                    pct_1d = (series.iloc[-1] / series.iloc[-2] - 1) * 100
+                if len(series) > 0:
+                    current_price = series.iloc[-1]
+                    latest_date = series.index[-1]
+                    date_label = latest_date.strftime('%m/%d')
+                    candidate7 = series[series.index <= latest_date - pd.Timedelta(days=7)]
+                    if len(candidate7) > 0:
+                        pct_7d = (series.iloc[-1] / candidate7.iloc[-1] - 1) * 100
+                    candidate30 = series[series.index <= latest_date - pd.Timedelta(days=30)]
+                    if len(candidate30) > 0:
+                        pct_30d = (series.iloc[-1] / candidate30.iloc[-1] - 1) * 100
+                    candidate365 = series[series.index <= latest_date - pd.Timedelta(days=365)]
+                    if len(candidate365) > 0:
+                        pct_365d = (series.iloc[-1] / candidate365.iloc[-1] - 1) * 100
+                extra_data_list.append({
+                    "종목": ticker_name,
+                    date_label: f"{current_price:.2f}" if len(series) > 0 else "데이터 부족",
+                    "-1D": f"{pct_1d:.2f}%" if pct_1d is not None else "데이터 부족",
+                    "-1W": f"{pct_7d:.2f}%" if pct_7d is not None else "데이터 부족",
+                    "-1M": f"{pct_30d:.2f}%" if pct_30d is not None else "데이터 부족",
+                    "-1Y": f"{pct_365d:.2f}%" if pct_365d is not None else "데이터 부족"
+                })
+            extra_pct_df = pd.DataFrame(extra_data_list)
+            # 두 데이터프레임을 합치기 (행 단위)
+            combined_pct_df = pd.concat([combined_pct_df, extra_pct_df], axis=0, ignore_index=True)
+    except Exception as e:
+        st.error(f"나스닥, 필라델피아, 마이크론 데이터를 가져오는 중 오류 발생: {e}")
+    
     st.dataframe(combined_pct_df.style.set_properties(**{'font-size': '11px'}))
 
-# ----- 전체 정규화 그래프 (코스닥 제외, 나스닥과 코스피는 점선) -----
+# ----- 전체 정규화 그래프를 expander로 감싸기 -----
 with st.expander("전체 정규화 그래프 (1년 전 대비) 보기", expanded=False):
     try:
-        available_data = []
-        if 'close_left' in globals() or 'close_left' in locals():
+        if ('close_left' in globals() or 'close_left' in locals()) and \
+           ('close_right' in globals() or 'close_right' in locals()) and \
+           ('close_extra' in globals() or 'close_extra' in locals()):
+           
             # 코스닥 제외한 코스피 데이터
-            available_data.append(close_left.drop(columns=["코스닥"], errors="ignore"))
-        if 'close_right' in globals() or 'close_right' in locals():
-            available_data.append(close_right)
-        if 'close_extra' in globals() or 'close_extra' in locals():
-            available_data.append(close_extra)
+            close_left_without_kosdaq = close_left.drop(columns=["코스닥"], errors="ignore")
             
-        if available_data:
-            all_data = pd.concat(available_data, axis=1).sort_index()
+            # 국내 + 해외 주가 데이터(코스닥 제외)를 하나로 합침
+            all_data = pd.concat([close_left_without_kosdaq, close_right, close_extra], axis=1)
+            all_data = all_data.sort_index()
+            
             # 전체에서 가장 최신 날짜(end_date) 구하기
             end_date = all_data.dropna(how='all').index.max()
+            
             # base_date = end_date - 365일
             base_date = end_date - pd.Timedelta(days=365)
             

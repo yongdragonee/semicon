@@ -52,7 +52,6 @@ else:
 # ===============================================
 st.subheader("📢 반도체 뉴스레터(Rev.25.3.29)")
 
-
 # ---- 사이드바 날짜 필터 옵션 ----
 date_filter_option = st.sidebar.radio(
     "📅 날짜 필터 옵션",
@@ -87,7 +86,7 @@ search_query = st.sidebar.text_input(
     help="특정 단어가 포함된 기사만 검색합니다."
 )
 
-# ---- 사이드바 검색어 필터 (버전) ----
+# ---- 사이드바 정보 ----
 st.sidebar.write("문의/아이디어 : yh9003.lee@samsung.com")
 st.sidebar.write("3/5 Streamlit 기반 오픈")
 st.sidebar.write("3/13 검색기능 추가")
@@ -216,7 +215,7 @@ for ticker in ["코스피", "코스닥"]:
     })
 left_pct_df = pd.DataFrame(left_data_list)
 styled_left_pct_df = left_pct_df.style.set_properties(**{'font-size': '11px'})
-st.dataframe(styled_left_pct_df)
+# st.dataframe(styled_left_pct_df)  # 개별 출력 부분은 주석처리
 
 # ----- 삼성전자 / SK하이닉스 주가 변동률 계산 및 테이블 출력 -----
 right_data_list = []
@@ -248,12 +247,18 @@ for ticker in ["삼성전자", "SK하이닉스"]:
     })
 right_pct_df = pd.DataFrame(right_data_list)
 styled_right_pct_df = right_pct_df.style.set_properties(**{'font-size': '11px'})
-st.dataframe(styled_right_pct_df)
+# st.dataframe(styled_right_pct_df)  # 개별 출력 부분은 주석처리
 
-# ----- (주석처리) 정규화 그래프: 코스피, 코스닥, 삼성전자, SK하이닉스 -----
+# ----- 두 개의 표를 합쳐서 하나의 표로 출력 -----
+# 코스피/코스닥 표의 "지수" 열을 "종목"으로 변경 후 결합
+left_pct_df_renamed = left_pct_df.rename(columns={"지수": "종목"})
+combined_pct_df = pd.concat([left_pct_df_renamed, right_pct_df], axis=0, ignore_index=True)
+styled_combined_pct_df = combined_pct_df.style.set_properties(**{'font-size': '11px'})
+st.dataframe(styled_combined_pct_df)
+
+# ----- (주석처리) 정규화 그래프: 코스피, 코스닥, 삼성전자, SK하이닉스 ----- 
 # st.header("📈 정규화 가격 비교: 코스피, 코스닥, 삼성전자, SK하이닉스")
 # try:
-#     # 좌측의 close_left와 우측의 close_right를 합침
 #     combined_data = pd.concat([close_left, close_right], axis=1)
 #     normalized_combined = combined_data.apply(lambda x: x / x.iloc[0] * 100)
 #     fig, ax = plt.subplots(figsize=(8,4))
@@ -333,69 +338,56 @@ try:
     if ('close_left' in globals() or 'close_left' in locals()) and \
        ('close_right' in globals() or 'close_right' in locals()) and \
        ('close_extra' in globals() or 'close_extra' in locals()):
-
-        # 우선 코스닥만 제거한 상태(코드상 이미 적용된 로직)
+       
+        # 우선 코스닥만 제거한 상태
         close_left_without_kosdaq = close_left.drop(columns=["코스닥"], errors="ignore")
-
+        
         # 국내 + 해외 주가 데이터(코스닥 제외)를 하나로 합침
         all_data = pd.concat([close_left_without_kosdaq, close_right, close_extra], axis=1)
-        all_data = all_data.sort_index()  # 혹시 인덱스가 시간 순으로 정렬 안 되어있다면 정렬
-
+        all_data = all_data.sort_index()
+        
         # (1) 전체에서 가장 최신 날짜(end_date) 구하기
         end_date = all_data.dropna(how='all').index.max()
-
+        
         # (2) base_date = end_date - 365일
         base_date = end_date - pd.Timedelta(days=365)
-
-        # (3) 각 종목별로 1년 전 가격(base_value) 찾고, 비율(=정규화) 계산
+        
+        # (3) 각 종목별로 1년 전 가격(base_value) 찾고, 정규화 계산
         norm_dfs = []
-        valid_cols = []  # 실제로 1년 전 데이터가 존재하는 종목만 담을 리스트
-
+        valid_cols = []
         for col in all_data.columns:
             series = all_data[col].dropna().sort_index()
             if series.empty:
                 continue
-
-            # series에서 (base_date 이하) 중 가장 마지막 거래일 찾기
             base_candidates = series[series.index <= base_date]
             if base_candidates.empty:
-                # 1년 전 기준 데이터가 전혀 없으면 스킵
                 continue
-
-            base_val = base_candidates.iloc[-1]  # 가장 늦은 거래일의 가격
-            # 정규화: 현재값 / base_val * 100
+            base_val = base_candidates.iloc[-1]
             norm_series = (series / base_val) * 100
             norm_dfs.append(norm_series)
             valid_cols.append(col)
-
+        
         if not norm_dfs:
             st.warning("1년 전 데이터가 없어 정규화 그래프를 그릴 수 없습니다.")
         else:
-            # (4) 종목별 정규화 시리즈를 합치고, base_date ~ end_date 구간만 추출
             normalized_all = pd.concat(norm_dfs, axis=1)
             normalized_all = normalized_all[normalized_all.index >= base_date]
-            normalized_all.columns = valid_cols  # 열 이름 재지정
-
-            # (5) 그래프 그리기
+            normalized_all.columns = valid_cols
+            
             fig, ax = plt.subplots(figsize=(10, 6))
-
             for col in normalized_all.columns:
-                # 나스닥, 코스피, 필라델피아만 점선
                 if col in ["나스닥", "코스피", "필라델피아"]:
                     ax.plot(normalized_all.index, normalized_all[col], label=col, linestyle="--")
                 else:
                     ax.plot(normalized_all.index, normalized_all[col], label=col, linestyle="-")
-
             ax.set_ylabel("정규화 가격 (Base = 1년 전)", fontproperties=fontprop)
             ax.set_title("전체 정규화 가격 비교 (1년 전 대비)", fontproperties=fontprop)
             ax.legend(prop=fontprop)
             st.pyplot(fig)
-
     else:
         st.warning("국내 또는 해외 주가 데이터가 누락되어 전체 정규화 그래프를 그릴 수 없습니다.")
 except Exception as e:
     st.error(f"전체 정규화 그래프를 그리는 중 오류 발생: {e}")
-
 
 # ===============================================
 # 6. 뉴스 출력

@@ -202,129 +202,209 @@ if 'close_right' in globals():
 else:
     st.write("삼성전자/SK하이닉스 데이터가 없습니다.")
 
-# ----- 주가 변동률 계산 및 표 출력 (클릭하면 보이도록 expander로 처리) -----
-with st.expander("코스피/코스닥 및 삼성전자/SK하이닉스 주가 변동률 계산 및 테이블 보기", expanded=False):
-    # 코스피/코스닥 주가 변동률 계산
-    left_data_list = []
-    for ticker in ["코스피", "코스닥"]:
-        series = close_left[ticker].dropna().sort_index()
-        pct_1d = pct_7d = pct_30d = pct_365d = None
-        if len(series) >= 2:
-            pct_1d = (series.iloc[-1] / series.iloc[-2] - 1) * 100
-        if len(series) > 0:
-            current_price = series.iloc[-1]
-            latest_date = series.index[-1]
-            date_label = latest_date.strftime('%m/%d')
-            candidate7 = series[series.index <= latest_date - pd.Timedelta(days=7)]
-            if len(candidate7) > 0:
-                pct_7d = (series.iloc[-1] / candidate7.iloc[-1] - 1) * 100
-            candidate30 = series[series.index <= latest_date - pd.Timedelta(days=30)]
-            if len(candidate30) > 0:
-                pct_30d = (series.iloc[-1] / candidate30.iloc[-1] - 1) * 100
-            candidate365 = series[series.index <= latest_date - pd.Timedelta(days=365)]
-            if len(candidate365) > 0:
-                pct_365d = (series.iloc[-1] / candidate365.iloc[-1] - 1) * 100
-        left_data_list.append({
-            "지수": ticker,
-            date_label: f"{current_price:.0f}" if len(series) > 0 else "데이터 부족",
-            "-1D": f"{pct_1d:.1f}%" if pct_1d is not None else "데이터 부족",
-            "-1W": f"{pct_7d:.1f}%" if pct_7d is not None else "데이터 부족",
-            "-1M": f"{pct_30d:.1f}%" if pct_30d is not None else "데이터 부족",
-            "-1Y": f"{pct_365d:.1f}%" if pct_365d is not None else "데이터 부족"
-        })
-    left_pct_df = pd.DataFrame(left_data_list)
-    
-    # 삼성전자 / SK하이닉스 주가 변동률 계산
-    right_data_list = []
-    for ticker in ["삼성전자", "SK하이닉스"]:
-        series = close_right[ticker].dropna().sort_index()
-        pct_1d = pct_7d = pct_30d = pct_365d = None
-        if len(series) >= 2:
-            pct_1d = (series.iloc[-1] / series.iloc[-2] - 1) * 100
-        if len(series) > 0:
-            current_price = series.iloc[-1]
-            latest_date = series.index[-1]
-            date_label = latest_date.strftime('%m/%d')
-            candidate7 = series[series.index <= latest_date - pd.Timedelta(days=7)]
-            if len(candidate7) > 0:
-                pct_7d = (series.iloc[-1] / candidate7.iloc[-1] - 1) * 100
-            candidate30 = series[series.index <= latest_date - pd.Timedelta(days=30)]
-            if len(candidate30) > 0:
-                pct_30d = (series.iloc[-1] / candidate30.iloc[-1] - 1) * 100
-            candidate365 = series[series.index <= latest_date - pd.Timedelta(days=365)]
-            if len(candidate365) > 0:
-                pct_365d = (series.iloc[-1] / candidate365.iloc[-1] - 1) * 100
-        right_data_list.append({
-            "종목": ticker,
-            date_label: f"{current_price:.0f}" if len(series) > 0 else "데이터 부족",
-            "-1D": f"{pct_1d:.1f}%" if pct_1d is not None else "데이터 부족",
-            "-1W": f"{pct_7d:.1f}%" if pct_7d is not None else "데이터 부족",
-            "-1M": f"{pct_30d:.1f}%" if pct_30d is not None else "데이터 부족",
-            "-1Y": f"{pct_365d:.1f}%" if pct_365d is not None else "데이터 부족"
-        })
-    right_pct_df = pd.DataFrame(right_data_list)
-    
-    # 두 표 결합 (코스피/코스닥의 "지수"를 "종목"으로 변경 후 결합)
-    left_pct_df_renamed = left_pct_df.rename(columns={"지수": "종목"})
-    combined_pct_df = pd.concat([left_pct_df_renamed, right_pct_df], axis=0, ignore_index=True)
-    st.dataframe(combined_pct_df.style.set_properties(**{'font-size': '11px'}))
+# ----- 코스피/코스닥 주가 변동률 계산 및 테이블 출력 -----
+left_data_list = []
+for ticker in ["코스피", "코스닥"]:
+    series = close_left[ticker].dropna().sort_index()
+    pct_1d = pct_7d = pct_30d = pct_365d = None
+    if len(series) >= 2:
+        pct_1d = (series.iloc[-1] / series.iloc[-2] - 1) * 100
+    if len(series) > 0:
+        current_price = series.iloc[-1]
+        latest_date = series.index[-1]
+        date_label = latest_date.strftime('%m/%d')
+        candidate7 = series[series.index <= latest_date - pd.Timedelta(days=7)]
+        if len(candidate7) > 0:
+            pct_7d = (series.iloc[-1] / candidate7.iloc[-1] - 1) * 100
+        candidate30 = series[series.index <= latest_date - pd.Timedelta(days=30)]
+        if len(candidate30) > 0:
+            pct_30d = (series.iloc[-1] / candidate30.iloc[-1] - 1) * 100
+        candidate365 = series[series.index <= latest_date - pd.Timedelta(days=365)]
+        if len(candidate365) > 0:
+            pct_365d = (series.iloc[-1] / candidate365.iloc[-1] - 1) * 100
+    left_data_list.append({
+        "지수": ticker,
+        date_label: f"{current_price:.0f}" if len(series) > 0 else "데이터 부족",
+        "-1D": f"{pct_1d:.1f}%" if pct_1d is not None else "데이터 부족",
+        "-1W": f"{pct_7d:.1f}%" if pct_7d is not None else "데이터 부족",
+        "-1M": f"{pct_30d:.1f}%" if pct_30d is not None else "데이터 부족",
+        "-1Y": f"{pct_365d:.1f}%" if pct_365d is not None else "데이터 부족"
+    })
+left_pct_df = pd.DataFrame(left_data_list)
+styled_left_pct_df = left_pct_df.style.set_properties(**{'font-size': '11px'})
+# st.dataframe(styled_left_pct_df)  # 개별 출력 부분은 주석처리
 
-# ----- 전체 정규화 그래프도 expander 내부로 이동 -----
-with st.expander("전체 정규화 그래프 (1년 전 대비) 보기", expanded=False):
-    try:
-        if ('close_left' in globals() or 'close_left' in locals()) and \
-           ('close_right' in globals() or 'close_right' in locals()) and \
-           ('close_extra' in globals() or 'close_extra' in locals()):
-           
-            # 코스닥만 제거한 상태의 코스피 데이터
-            close_left_without_kosdaq = close_left.drop(columns=["코스닥"], errors="ignore")
-            
-            # 국내 + 해외 주가 데이터(코스닥 제외)를 하나로 합침
-            all_data = pd.concat([close_left_without_kosdaq, close_right, close_extra], axis=1)
-            all_data = all_data.sort_index()
-            
-            # 전체에서 가장 최신 날짜(end_date) 구하기
-            end_date = all_data.dropna(how='all').index.max()
-            
-            # base_date = end_date - 365일
-            base_date = end_date - pd.Timedelta(days=365)
-            
-            # 각 종목별 1년 전 가격을 기준으로 정규화 계산
-            norm_dfs = []
-            valid_cols = []
-            for col in all_data.columns:
-                series = all_data[col].dropna().sort_index()
-                if series.empty:
-                    continue
-                base_candidates = series[series.index <= base_date]
-                if base_candidates.empty:
-                    continue
-                base_val = base_candidates.iloc[-1]
-                norm_series = (series / base_val) * 100
-                norm_dfs.append(norm_series)
-                valid_cols.append(col)
-            
-            if not norm_dfs:
-                st.warning("1년 전 데이터가 없어 정규화 그래프를 그릴 수 없습니다.")
-            else:
-                normalized_all = pd.concat(norm_dfs, axis=1)
-                normalized_all = normalized_all[normalized_all.index >= base_date]
-                normalized_all.columns = valid_cols
-                
-                fig, ax = plt.subplots(figsize=(10, 6))
-                for col in normalized_all.columns:
-                    if col in ["나스닥", "코스피", "필라델피아"]:
-                        ax.plot(normalized_all.index, normalized_all[col], label=col, linestyle="--")
-                    else:
-                        ax.plot(normalized_all.index, normalized_all[col], label=col, linestyle="-")
-                ax.set_ylabel("정규화 가격 (Base = 1년 전)", fontproperties=fontprop)
-                ax.set_title("전체 정규화 가격 비교 (1년 전 대비)", fontproperties=fontprop)
-                ax.legend(prop=fontprop)
-                st.pyplot(fig)
+# ----- 삼성전자 / SK하이닉스 주가 변동률 계산 및 테이블 출력 -----
+right_data_list = []
+for ticker in ["삼성전자", "SK하이닉스"]:
+    series = close_right[ticker].dropna().sort_index()
+    pct_1d = pct_7d = pct_30d = pct_365d = None
+    if len(series) >= 2:
+        pct_1d = (series.iloc[-1] / series.iloc[-2] - 1) * 100
+    if len(series) > 0:
+        current_price = series.iloc[-1]
+        latest_date = series.index[-1]
+        date_label = latest_date.strftime('%m/%d')
+        candidate7 = series[series.index <= latest_date - pd.Timedelta(days=7)]
+        if len(candidate7) > 0:
+            pct_7d = (series.iloc[-1] / candidate7.iloc[-1] - 1) * 100
+        candidate30 = series[series.index <= latest_date - pd.Timedelta(days=30)]
+        if len(candidate30) > 0:
+            pct_30d = (series.iloc[-1] / candidate30.iloc[-1] - 1) * 100
+        candidate365 = series[series.index <= latest_date - pd.Timedelta(days=365)]
+        if len(candidate365) > 0:
+            pct_365d = (series.iloc[-1] / candidate365.iloc[-1] - 1) * 100
+    right_data_list.append({
+        "종목": ticker,
+        date_label: f"{current_price:.0f}" if len(series) > 0 else "데이터 부족",
+        "-1D": f"{pct_1d:.1f}%" if pct_1d is not None else "데이터 부족",
+        "-1W": f"{pct_7d:.1f}%" if pct_7d is not None else "데이터 부족",
+        "-1M": f"{pct_30d:.1f}%" if pct_30d is not None else "데이터 부족",
+        "-1Y": f"{pct_365d:.1f}%" if pct_365d is not None else "데이터 부족"
+    })
+right_pct_df = pd.DataFrame(right_data_list)
+styled_right_pct_df = right_pct_df.style.set_properties(**{'font-size': '11px'})
+# st.dataframe(styled_right_pct_df)  # 개별 출력 부분은 주석처리
+
+# ----- 두 개의 표를 합쳐서 하나의 표로 출력 -----
+# 코스피/코스닥 표의 "지수" 열을 "종목"으로 변경 후 결합
+left_pct_df_renamed = left_pct_df.rename(columns={"지수": "종목"})
+combined_pct_df = pd.concat([left_pct_df_renamed, right_pct_df], axis=0, ignore_index=True)
+styled_combined_pct_df = combined_pct_df.style.set_properties(**{'font-size': '11px'})
+st.dataframe(styled_combined_pct_df)
+
+# ----- (주석처리) 정규화 그래프: 코스피, 코스닥, 삼성전자, SK하이닉스 ----- 
+# st.header("📈 정규화 가격 비교: 코스피, 코스닥, 삼성전자, SK하이닉스")
+# try:
+#     combined_data = pd.concat([close_left, close_right], axis=1)
+#     normalized_combined = combined_data.apply(lambda x: x / x.iloc[0] * 100)
+#     fig, ax = plt.subplots(figsize=(8,4))
+#     for col in normalized_combined.columns:
+#         ax.plot(normalized_combined.index, normalized_combined[col], label=col)
+#     ax.set_ylabel("정규화 가격 (Base 100)", fontproperties=fontprop)
+#     ax.set_title("코스피, 코스닥, 삼성전자, SK하이닉스 정규화 가격 비교", fontproperties=fontprop)
+#     ax.legend(prop=fontprop)
+#     st.pyplot(fig)
+# except Exception as e:
+#     st.error(f"정규화 그래프를 그리는 중 오류 발생: {e}")
+
+# 티커 설정: 나스닥(^IXIC), 필라델피아 반도체 지수(^SOX), 마이크론(MU)
+tickers_extra = {"나스닥": "^IXIC", "필라델피아": "^SOX", "마이크론": "MU"}
+extra_list = list(tickers_extra.values())
+
+try:
+    extra_data = yf.download(extra_list, start=start_date_for_yf, end=end_date_for_yf)
+    if extra_data.empty:
+        st.warning("해당 기간에 대한 데이터를 가져올 수 없습니다.")
+    else:
+        if isinstance(extra_data.columns, pd.MultiIndex):
+            close_extra = extra_data['Close']
         else:
-            st.warning("국내 또는 해외 주가 데이터가 누락되어 전체 정규화 그래프를 그릴 수 없습니다.")
-    except Exception as e:
-        st.error(f"전체 정규화 그래프를 그리는 중 오류 발생: {e}")
+            close_extra = extra_data[['Close']]
+        # 티커명을 한글로 변경
+        ticker_map_extra = {v: k for k, v in tickers_extra.items()}
+        close_extra.rename(columns=ticker_map_extra, inplace=True)
+        
+        # (주석처리) 정규화 차트 그리기
+        # normalized_extra = close_extra.apply(lambda x: x / x.iloc[0] * 100)
+        # fig, ax = plt.subplots(figsize=(8,4))
+        # for col in normalized_extra.columns:
+        #     ax.plot(normalized_extra.index, normalized_extra[col], label=col)
+        # ax.set_ylabel("정규화 가격 (Base 100)", fontproperties=fontprop)
+        # ax.set_title("나스닥, 필라델피아 반도체, 마이크론 (정규화 가격)", fontproperties=fontprop)
+        # ax.legend(prop=fontprop)
+        # st.pyplot(fig)
+        
+        # 각 종목별 변동률 계산 (최근 1일, 7일, 1달, 1년)
+        extra_data_list = []
+        for ticker_name in close_extra.columns:
+            series = close_extra[ticker_name].dropna().sort_index()
+            pct_1d = pct_7d = pct_30d = pct_365d = None
+            if len(series) >= 2:
+                pct_1d = (series.iloc[-1] / series.iloc[-2] - 1) * 100
+            if len(series) > 0:
+                current_price = series.iloc[-1]
+                latest_date = series.index[-1]
+                date_label = latest_date.strftime('%m/%d')
+                candidate7 = series[series.index <= latest_date - pd.Timedelta(days=7)]
+                if len(candidate7) > 0:
+                    pct_7d = (series.iloc[-1] / candidate7.iloc[-1] - 1) * 100
+                candidate30 = series[series.index <= latest_date - pd.Timedelta(days=30)]
+                if len(candidate30) > 0:
+                    pct_30d = (series.iloc[-1] / candidate30.iloc[-1] - 1) * 100
+                candidate365 = series[series.index <= latest_date - pd.Timedelta(days=365)]
+                if len(candidate365) > 0:
+                    pct_365d = (series.iloc[-1] / candidate365.iloc[-1] - 1) * 100
+            extra_data_list.append({
+                "종목": ticker_name,
+                date_label: f"{current_price:.2f}" if len(series) > 0 else "데이터 부족",
+                "-1D": f"{pct_1d:.2f}%" if pct_1d is not None else "데이터 부족",
+                "-1W": f"{pct_7d:.2f}%" if pct_7d is not None else "데이터 부족",
+                "-1M": f"{pct_30d:.2f}%" if pct_30d is not None else "데이터 부족",
+                "-1Y": f"{pct_365d:.2f}%" if pct_365d is not None else "데이터 부족"
+            })
+        extra_pct_df = pd.DataFrame(extra_data_list)
+        styled_extra_pct_df = extra_pct_df.style.set_properties(**{'font-size': '11px'})
+        st.dataframe(styled_extra_pct_df)
+except Exception as e:
+    st.error(f"나스닥, 필라델피아 반도체, 마이크론 데이터를 가져오는 중 오류 발생: {e}")
+
+# ----- 전체 정규화 그래프: 코스닥 제외, 나스닥과 코스피는 점선으로 -----
+st.subheader("정규화 가격 (1년 전 대비)")
+try:
+    if ('close_left' in globals() or 'close_left' in locals()) and \
+       ('close_right' in globals() or 'close_right' in locals()) and \
+       ('close_extra' in globals() or 'close_extra' in locals()):
+       
+        # 우선 코스닥만 제거한 상태
+        close_left_without_kosdaq = close_left.drop(columns=["코스닥"], errors="ignore")
+        
+        # 국내 + 해외 주가 데이터(코스닥 제외)를 하나로 합침
+        all_data = pd.concat([close_left_without_kosdaq, close_right, close_extra], axis=1)
+        all_data = all_data.sort_index()
+        
+        # (1) 전체에서 가장 최신 날짜(end_date) 구하기
+        end_date = all_data.dropna(how='all').index.max()
+        
+        # (2) base_date = end_date - 365일
+        base_date = end_date - pd.Timedelta(days=365)
+        
+        # (3) 각 종목별로 1년 전 가격(base_value) 찾고, 정규화 계산
+        norm_dfs = []
+        valid_cols = []
+        for col in all_data.columns:
+            series = all_data[col].dropna().sort_index()
+            if series.empty:
+                continue
+            base_candidates = series[series.index <= base_date]
+            if base_candidates.empty:
+                continue
+            base_val = base_candidates.iloc[-1]
+            norm_series = (series / base_val) * 100
+            norm_dfs.append(norm_series)
+            valid_cols.append(col)
+        
+        if not norm_dfs:
+            st.warning("1년 전 데이터가 없어 정규화 그래프를 그릴 수 없습니다.")
+        else:
+            normalized_all = pd.concat(norm_dfs, axis=1)
+            normalized_all = normalized_all[normalized_all.index >= base_date]
+            normalized_all.columns = valid_cols
+            
+            fig, ax = plt.subplots(figsize=(10, 6))
+            for col in normalized_all.columns:
+                if col in ["나스닥", "코스피", "필라델피아"]:
+                    ax.plot(normalized_all.index, normalized_all[col], label=col, linestyle="--")
+                else:
+                    ax.plot(normalized_all.index, normalized_all[col], label=col, linestyle="-")
+            ax.set_ylabel("정규화 가격 (Base = 1년 전)", fontproperties=fontprop)
+            ax.set_title("전체 정규화 가격 비교 (1년 전 대비)", fontproperties=fontprop)
+            ax.legend(prop=fontprop)
+            st.pyplot(fig)
+    else:
+        st.warning("국내 또는 해외 주가 데이터가 누락되어 전체 정규화 그래프를 그릴 수 없습니다.")
+except Exception as e:
+    st.error(f"전체 정규화 그래프를 그리는 중 오류 발생: {e}")
 
 # ===============================================
 # 6. 뉴스 출력

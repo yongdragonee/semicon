@@ -111,7 +111,7 @@ st.write(f"**총 기사 수:** {len(filtered_df)}개")
 # ===============================================
 # 5. 주가 정보 조회 - yfinance 사용 (최근 1년)
 # ===============================================
-st.header("📈 주가 현황")
+st.subheader("📈 주가 현황")
 today = datetime.date.today()
 start_date_for_yf = today - datetime.timedelta(days=370)
 end_date_for_yf = today + datetime.timedelta(days=1)
@@ -187,7 +187,6 @@ with col2:
 
 # ----- 1일 기준(1d) 삼성전자와 SK하이닉스 주가 정보 출력 -----
 if 'close_right' in globals():
-    st.write("**1일 기준 주가 정보 (삼성전자 / SK하이닉스)**")
     for ticker in ["삼성전자", "SK하이닉스"]:
         series = close_right[ticker].dropna().sort_index()
         if len(series) >= 2:
@@ -195,7 +194,7 @@ if 'close_right' in globals():
             current_price = series.iloc[-1]
             previous_price = series.iloc[-2]
             pct_1d = (current_price / previous_price - 1) * 100
-            st.write(f"1d 기준 날짜: {base_date} | {ticker}: {current_price:.0f} / {pct_1d:.1f}%")
+            st.write(f"{base_date} | {ticker}: {current_price:.0f} / {pct_1d:.1f}%")
         else:
             st.write(f"{ticker}: 데이터 부족")
 else:
@@ -262,7 +261,7 @@ with st.expander("주가 변동률 표 보기", expanded=False):
     domestic_df_right = pd.DataFrame(domestic_right_data_list)
     domestic_df = pd.concat([domestic_df_left.rename(columns={"지수": "종목"}), domestic_df_right], axis=0, ignore_index=True)
     
-    st.markdown("### 국내 주가 변동률 (코스피, 코스닥, 삼성전자, SK하이닉스)")
+    st.markdown("### 국내 주가 변동률")
     st.dataframe(domestic_df.style.set_properties(**{'font-size': '11px'}))
     
     # 해외 데이터: 나스닥, 필라델피아, 마이크론
@@ -299,14 +298,14 @@ with st.expander("주가 변동률 표 보기", expanded=False):
                         pct_365d = (series.iloc[-1] / candidate365.iloc[-1] - 1) * 100
                 foreign_data_list.append({
                     "종목": ticker_name,
-                    date_label: f"{current_price:.2f}" if len(series) > 0 else "데이터 부족",
-                    "-1D": f"{pct_1d:.2f}%" if pct_1d is not None else "데이터 부족",
-                    "-1W": f"{pct_7d:.2f}%" if pct_7d is not None else "데이터 부족",
-                    "-1M": f"{pct_30d:.2f}%" if pct_30d is not None else "데이터 부족",
-                    "-1Y": f"{pct_365d:.2f}%" if pct_365d is not None else "데이터 부족"
+                    date_label: f"{current_price:.0f}" if len(series) > 0 else "데이터 부족",
+                    "-1D": f"{pct_1d:.1f}%" if pct_1d is not None else "데이터 부족",
+                    "-1W": f"{pct_7d:.1f}%" if pct_7d is not None else "데이터 부족",
+                    "-1M": f"{pct_30d:.1f}%" if pct_30d is not None else "데이터 부족",
+                    "-1Y": f"{pct_365d:.1f}%" if pct_365d is not None else "데이터 부족"
                 })
             foreign_df = pd.DataFrame(foreign_data_list)
-            st.markdown("### 해외 주가 변동률 (나스닥, 필라델피아, 마이크론)")
+            st.markdown("### 해외 주가 변동률")
             st.dataframe(foreign_df.style.set_properties(**{'font-size': '11px'}))
         else:
             st.warning("해외 데이터가 없습니다.")

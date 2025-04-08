@@ -1,17 +1,8 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import nltk
-from nltk.sentiment import SentimentIntensityAnalyzer
 import time
 
-# NLTK의 vader_lexicon 다운로드 (최초 실행 시에만)
-nltk.download('vader_lexicon')
-
-# VADER Sentiment Analyzer 초기화
-sia = SentimentIntensityAnalyzer()
-
-# GitHub에 저장된 데이터 소스를 st.secrets에서 불러오기
+# GitHub에 저장된 데이터 소스를 시크릿에서 불러오기
 GITHUB_REPORT_URL = st.secrets["REPORT_URL"] + f"?nocache={int(time.time())}"
 
 # 데이터 로딩 함수 (Streamlit 캐싱 이용)
@@ -23,27 +14,11 @@ def load_report_data(url):
         df['date'] = pd.to_datetime(df['date'], errors='coerce')
     return df
 
-# 데이터 불러오기 (GitHub Report URL 사용)
+# 데이터 불러오기
 data = load_report_data(GITHUB_REPORT_URL)
 
-# 감정 분석 수행 함수: 'summary' 컬럼 기준 (필요시 'content'로 대체 가능)
-def compute_sentiment(text):
-    if pd.isnull(text):
-        return None
-    return sia.polarity_scores(text)
-
-# 감정 분석 결과 컬럼 추가: 'summary' 컬럼 기준
-if 'summary' in data.columns:
-    sentiment_scores = data['summary'].apply(compute_sentiment)
-    # 각 원소가 dict 형태이므로, 이를 개별 컬럼으로 변환합니다.
-    sentiment_df = sentiment_scores.apply(pd.Series)
-    # 감정 분석 결과를 원본 데이터에 합칩니다.
-    data = pd.concat([data, sentiment_df], axis=1)
-
-# 사이드바 - 필터 옵션
+# 사이드바 - 필터 옵션 (필요에 따라 추가)
 st.sidebar.header("필터 옵션")
-
-# 날짜 필터 (date 컬럼이 있을 경우)
 if 'date' in data.columns:
     min_date = data['date'].min()
     max_date = data['date'].max()
@@ -52,13 +27,11 @@ if 'date' in data.columns:
         start_date, end_date = date_range
         data = data[(data['date'] >= pd.Timestamp(start_date)) & (data['date'] <= pd.Timestamp(end_date))]
 
-# 업종/섹터 필터 (컬럼명이 'sector'인 경우)
 if 'sector' in data.columns:
     sectors = data['sector'].unique().tolist()
     selected_sectors = st.sidebar.multiselect("업종 선택", sectors, default=sectors)
     data = data[data['sector'].isin(selected_sectors)]
 
-# 키워드 검색 (제목과 요약 기준)
 keyword = st.sidebar.text_input("키워드 검색 (제목, 요약)")
 if keyword:
     data = data[
@@ -66,26 +39,23 @@ if keyword:
         data['summary'].str.contains(keyword, case=False, na=False)
     ]
 
-st.title("증권 레포트 모음 및 분석")
-st.write("### 데이터 미리보기")
-st.dataframe(data.head())
+st.title("증권 레포트 모음")
+st.write("좌측 목록에서 레포트를 선택하세요.")
 
-# 전체 감정 분석 결과 시각화 (Compound 점수 분포)
-if 'compound' in data.columns:
-    st.write("### 전체 레포트 감정 분석 분포")
-    fig, ax = plt.subplots(figsize=(8, 4))
-    ax.hist(data['compound'].dropna(), bins=20)
-    ax.set_title("Compound 점수 분포")
-    ax.set_xlabel("Compound 점수")
-    ax.set_ylabel("레포트 수")
-    st.pyplot(fig)
+if data.empty:
+    st.write("선택된 필터에 해당하는 레포트가 없습니다.")
+else:
+    # 레포트 목록: 각 레포트의 날짜와 제목을 표시하는 선택 옵션 생성
+    def format_report(idx):
+        # 날짜가 없으면 'No Date' 표시
+        date_str = data.loc[idx, 'date'].strftime('%Y-%m-%d') if pd.notnull(data.loc[idx, 'date']) else "No Date"
+        return f"{date_str} - {data.loc[idx, 'title']}"
 
-# 왼쪽에서 보고 싶은 레포트를 선택해서 상세보기
-st.write("### 상세 레포트 보기")
-if not data.empty:
-    # DataFrame의 인덱스 선택을 통해 레포트를 확인합니다.
-    selected_index = st.selectbox("레포트 선택", data.index)
-    report = data.loc[selected_index]
+    # st.selectbox 옵션에는 데이터프레임의 인덱스 리스트를 사용하고, format_func로 날짜-제목 문자열 반환
+    selected_idx = st.selectbox("레포트 선택", data.index.tolist(), format_func=format_report)
+
+    # 선택된 레포트 세부 정보 출력
+    report = data.loc[selected_idx]
     
     st.subheader(report.get('title', '제목 없음'))
     if 'date' in report:
@@ -94,23 +64,15 @@ if not data.empty:
         st.text("애널리스트: " + str(report['analyst']))
     if 'sector' in report:
         st.text("업종: " + str(report['sector']))
-        
-    # 요약 및 내용 출력
+
+    # 요약 표시 (summary 컬럼이 있는 경우)
     if 'summary' in report:
         st.write("**요약**")
         st.write(report['summary'])
-    if 'content' in report:
-        st.write("**레포트 내용**")
-        st.write(report['content'])
-    
-    # 감정 분석 결과 출력 (요약 텍스트 기준)
-    if 'compound' in report and pd.notnull(report['compound']):
-        st.write("**감정 분석 결과**")
-        st.write(f"긍정 (pos): {report['pos']:.2f}")
-        st.write(f"중립 (neu): {report['neu']:.2f}")
-        st.write(f"부정 (neg): {report['neg']:.2f}")
-        st.write(f"종합 (compound): {report['compound']:.2f}")
     else:
-        st.write("감정 분석 결과가 없습니다.")
-else:
-    st.write("필터링 결과가 없습니다.")
+        st.write("요약 정보가 없습니다.")
+
+    # 다운로드 버튼: 선택한 레포트의 데이터를 CSV 형식으로 다운로드
+    # 버튼 레이블에 아이콘(📥)을 추가하였습니다.
+    csv_data = report.to_csv(index=False)
+    st.download_button(label="📥 다운로드", data=csv_data, file_name=f"{report.get('title', 'report')}.csv", mime="text/csv")

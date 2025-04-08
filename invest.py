@@ -19,8 +19,8 @@ data = load_report_data(GITHUB_REPORT_URL)
 # 컬럼명 설정 (제공된 칼럼 기준)
 DATE_COLUMN = "날짜"
 TITLE_COLUMN = "레포트제목"
-SUMMARY_COLUMN_1Line = "1줄 요약"
 SUMMARY_COLUMN = "전체요약"
+SUMMARY_COLUMN_1LINE = "1줄 요약"  # CSV 파일에 이미 존재하는 1줄 요약 칼럼
 ANALYST_COLUMN = "증권사"
 
 # 사이드바 - 필터 옵션
@@ -54,7 +54,7 @@ if keyword:
 st.title("증권 레포트 모음")
 st.write("아래 목록에서 expander를 눌러 레포트 세부 내용을 확인하세요.")
 
-# 각 레포트의 날짜, 제목, 1줄 요약을 반환하는 함수
+# 각 레포트의 날짜, 제목, 1줄 요약을 반환하는 함수 (1줄 요약은 CSV의 SUMMARY_COLUMN_1LINE 칼럼을 사용)
 def format_report(idx):
     row = data.loc[idx]
     # 날짜 포맷팅
@@ -65,7 +65,12 @@ def format_report(idx):
         date_str = "날짜 없음"
     # 제목
     title_str = row[TITLE_COLUMN] if TITLE_COLUMN in row and pd.notnull(row[TITLE_COLUMN]) else "제목 없음"
-    result = f"{date_str} - {title_str}\n{SUMMARY_COLUMN_1Line}"
+    # 1줄 요약: CSV 파일의 "1줄 요약" 칼럼 사용
+    if SUMMARY_COLUMN_1LINE in row and pd.notnull(row[SUMMARY_COLUMN_1LINE]):
+        one_line_summary = row[SUMMARY_COLUMN_1LINE].strip()
+    else:
+        one_line_summary = "요약 없음"
+    return f"{date_str} - {title_str} - {one_line_summary}"
 
 if data.empty:
     st.write("선택된 필터에 해당하는 레포트가 없습니다.")
@@ -88,7 +93,7 @@ else:
             if ANALYST_COLUMN in report:
                 st.text("증권사: " + str(report[ANALYST_COLUMN]))
             
-            # 전체 요약
+            # 전체 요약 (세부 내용)
             st.write("**전체요약**")
             st.write(report[SUMMARY_COLUMN] if SUMMARY_COLUMN in report and pd.notnull(report[SUMMARY_COLUMN]) else "요약 정보가 없습니다.")
             

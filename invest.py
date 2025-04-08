@@ -51,7 +51,7 @@ if keyword:
     data = data[condition]
 
 st.title("증권 레포트 모음")
-st.write("아래 목록에서 레포트를 선택하세요.")
+st.write("아래 목록에서 expander를 눌러 레포트 세부 내용을 확인하세요.")
 
 # 각 레포트의 날짜, 제목, 1줄 요약을 반환하는 함수
 def format_report(idx):
@@ -64,7 +64,7 @@ def format_report(idx):
         date_str = "날짜 없음"
     # 제목
     title_str = row[TITLE_COLUMN] if TITLE_COLUMN in row and pd.notnull(row[TITLE_COLUMN]) else "제목 없음"
-    # 1줄 요약: 개행 문자로 나눈 첫 줄 사용, 길면 50자로 자름
+    # 1줄 요약: 개행 문자로 나눈 첫 줄 사용; 길면 50자로 자름
     if SUMMARY_COLUMN in row and pd.notnull(row[SUMMARY_COLUMN]):
         summary_full = row[SUMMARY_COLUMN].strip()
         summary_line = summary_full.splitlines()[0]
@@ -73,55 +73,36 @@ def format_report(idx):
         one_line_summary = "요약 없음"
     return f"{date_str} - {title_str} - {one_line_summary}"
 
-# URL 쿼리 파라미터 확인 (st.query_params is now a property, so remove the parentheses)
-query_params = st.query_params
-selected_report_idx = query_params.get("report", [None])[0]
-
-if selected_report_idx is None:
-    # 레포트 목록을 Markdown 링크 형식으로 출력
-    st.markdown("### 레포트 목록")
-    for idx in data.index:
-        line = format_report(idx)
-        # 링크 클릭 시 URL 쿼리 파라미터에 report 항목으로 해당 인덱스를 추가하여 페이지 리로드
-        link = f'<a href="?report={idx}">{line}</a>'
-        st.markdown(link, unsafe_allow_html=True)
+if data.empty:
+    st.write("선택된 필터에 해당하는 레포트가 없습니다.")
 else:
-    # 선택된 레포트 세부 정보 표시
-    try:
-        selected_idx = int(selected_report_idx)
-    except ValueError:
-        st.error("잘못된 보고서 선택입니다.")
-    else:
-        if selected_idx not in data.index:
-            st.error("유효하지 않은 보고서입니다.")
-        else:
-            report = data.loc[selected_idx]
+    # 각 레포트를 expander 형태로 출력
+    for idx in data.index:
+        header_line = format_report(idx)
+        with st.expander(header_line, expanded=False):
+            report = data.loc[idx]
+            # 레포트 제목
             st.subheader(report[TITLE_COLUMN] if TITLE_COLUMN in report and pd.notnull(report[TITLE_COLUMN]) else "제목 없음")
+            # 날짜
             if DATE_COLUMN in report:
                 if pd.notnull(report[DATE_COLUMN]):
                     date_text = report[DATE_COLUMN].strftime('%Y-%m-%d') if isinstance(report[DATE_COLUMN], pd.Timestamp) else str(report[DATE_COLUMN])
                 else:
                     date_text = "날짜 없음"
                 st.text("날짜: " + date_text)
+            # 증권사
             if ANALYST_COLUMN in report:
                 st.text("증권사: " + str(report[ANALYST_COLUMN]))
             
-            if SUMMARY_COLUMN in report:
-                st.write("**전체요약**")
-                st.write(report[SUMMARY_COLUMN])
-            else:
-                st.write("요약 정보가 없습니다.")
+            # 전체 요약
+            st.write("**전체요약**")
+            st.write(report[SUMMARY_COLUMN] if SUMMARY_COLUMN in report and pd.notnull(report[SUMMARY_COLUMN]) else "요약 정보가 없습니다.")
             
-            # 첨부파일 아이콘 버튼 (현재는 클릭 시 안내 메시지)
-            if st.button("📎 첨부파일"):
+            # 첨부파일 아이콘 버튼 (클릭 시 안내 메시지 출력)
+            if st.button("📎 첨부파일", key=f"attachment_{idx}"):
                 st.info("첨부파일 기능은 별도 구현이 필요합니다.")
             
-            # 다운로드 버튼: 선택된 레포트를 CSV 형식으로 다운로드
+            # CSV 다운로드 버튼: 선택된 레포트를 CSV 형식으로 다운로드
             csv_data = report.to_csv(index=False)
             download_file_name = f"{report[TITLE_COLUMN] if TITLE_COLUMN in report and pd.notnull(report[TITLE_COLUMN]) else 'report'}.csv"
-            st.download_button(label="📥 다운로드", data=csv_data, file_name=download_file_name, mime="text/csv")
-            
-            # 뒤로가기 버튼: 쿼리 파라미터 초기화 후 페이지 리로드
-            if st.button("뒤로가기"):
-                st.set_query_params()
-                st.experimental_rerun()
+            st.download_button(label="📥 다운로드", data=csv_data, file_name=download_file_name, mime="text/csv", key=f"download_{idx}")

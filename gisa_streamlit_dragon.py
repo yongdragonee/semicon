@@ -19,7 +19,7 @@ fontprop = fm.FontProperties(fname=font_path)
 # 1. 뉴스 CSV 불러오기 함수 (날짜 변환, 키워드 처리 포함)
 # ===============================================
 def load_news_data(csv_url):
-    df = pd.read_csv(csv_url, encoding='utf-8-sig')
+    df = pd.read_csv(csv_url, encoding='utf-8')
     if 'date' in df.columns:
         df['date'] = pd.to_datetime(df['date'], errors='coerce')
         df = df.sort_values(by='date', ascending=False)

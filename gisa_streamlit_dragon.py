@@ -112,7 +112,13 @@ if search_query:
 st.write(f"**총 기사 수:** {len(filtered_df)}개")
 
 # ===============================================
-# 5. 주가 정보 조회 - yfinance 사용 (최근 1년)
+# 5. 첨부파일(Report) 표시 (주가현황 위에 drop-down)
+# ===============================================
+with st.expander("첨부파일 보고서 보기", expanded=False):
+    st.dataframe(report)  # st.table(report)로 변경 가능
+
+# ===============================================
+# 6. 주가 정보 조회 - yfinance 사용 (최근 1년)
 # ===============================================
 st.subheader("📈 주가 현황")
 today = datetime.date.today()
@@ -122,7 +128,6 @@ col1, col2 = st.columns(2)
 
 # 좌측: 코스피지수 / 코스닥지수 (Dual Y-Axis)
 with col1:
-    #st.subheader("코스피/코스닥")
     left_tickers = {"코스피": "^KS11", "코스닥": "^KQ11"}
     left_list = list(left_tickers.values())
     try:
@@ -141,23 +146,22 @@ with col1:
             # dual y-axis 플롯 생성
             fig, ax1 = plt.subplots(figsize=(8,4))
             ax1.plot(close_left.index, close_left["코스피"], color='blue', label="코스피")
-            ax1.set_ylabel("코스피", color='blue', fontproperties=fontprop,fontsize=16)
+            ax1.set_ylabel("코스피", color='blue', fontproperties=fontprop, fontsize=16)
             ax1.tick_params(axis='y', labelcolor='blue')
             ax2 = ax1.twinx()
             ax2.plot(close_left.index, close_left["코스닥"], color='red', label="코스닥")
-            ax2.set_ylabel("코스닥", color='red', fontproperties=fontprop,fontsize=16)
+            ax2.set_ylabel("코스닥", color='red', fontproperties=fontprop, fontsize=16)
             ax2.tick_params(axis='y', labelcolor='red')
             lines1, labels1 = ax1.get_legend_handles_labels()
             lines2, labels2 = ax2.get_legend_handles_labels()
             ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', prop=fontprop)
-            ax1.set_title("코스피/코스닥 지수", fontproperties=fontprop,fontsize=20)
+            ax1.set_title("코스피/코스닥 지수", fontproperties=fontprop, fontsize=20)
             st.pyplot(fig)
     except Exception as e:
         st.error(f"코스피/코스닥 데이터를 가져오는 중 오류 발생: {e}")
 
 # 우측: 삼성전자 / SK하이닉스 (Dual Y-Axis)
 with col2:
-    #st.subheader("삼성전자 / SK하이닉스")
     right_tickers = {"삼성전자": "005930.KS", "SK하이닉스": "000660.KS"}
     right_list = list(right_tickers.values())
     try:
@@ -174,16 +178,16 @@ with col2:
             
             fig, ax1 = plt.subplots(figsize=(8,4))
             ax1.plot(close_right.index, close_right["삼성전자"], color='blue', label="삼성전자")
-            ax1.set_ylabel("삼성전자", color='blue', fontproperties=fontprop,fontsize=16)
+            ax1.set_ylabel("삼성전자", color='blue', fontproperties=fontprop, fontsize=16)
             ax1.tick_params(axis='y', labelcolor='blue')
             ax2 = ax1.twinx()
             ax2.plot(close_right.index, close_right["SK하이닉스"], color='red', label="SK하이닉스")
-            ax2.set_ylabel("SK하이닉스", color='red', fontproperties=fontprop,fontsize=16)
+            ax2.set_ylabel("SK하이닉스", color='red', fontproperties=fontprop, fontsize=16)
             ax2.tick_params(axis='y', labelcolor='red')
             lines1, labels1 = ax1.get_legend_handles_labels()
             lines2, labels2 = ax2.get_legend_handles_labels()
             ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', prop=fontprop)
-            ax1.set_title("삼성전자 / SK하이닉스", fontproperties=fontprop,fontsize=20)
+            ax1.set_title("삼성전자 / SK하이닉스", fontproperties=fontprop, fontsize=20)
             st.pyplot(fig)
     except Exception as e:
         st.error(f"삼성전자/SK하이닉스 데이터를 가져오는 중 오류 발생: {e}")
@@ -371,7 +375,7 @@ with st.expander("주가 변동률 표 보기", expanded=False):
         st.error(f"전체 정규화 그래프를 그리는 중 오류 발생: {e}")
 
 # ===============================================
-# 6. 뉴스 출력
+# 7. 뉴스 출력
 # ===============================================
 grouped_by_date = filtered_df.groupby(filtered_df['date'].dt.date, sort=False)
 for current_date, date_group in grouped_by_date:

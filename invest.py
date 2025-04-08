@@ -73,8 +73,8 @@ def format_report(idx):
         one_line_summary = "요약 없음"
     return f"{date_str} - {title_str} - {one_line_summary}"
 
-# URL 쿼리 파라미터 확인하여 선택된 레포트가 있는지 확인
-query_params = st.experimental_get_query_params()
+# URL 쿼리 파라미터 확인하여 선택된 레포트가 있는지 확인 (st.experimental_get_query_params -> st.query_params)
+query_params = st.query_params()
 selected_report_idx = query_params.get("report", [None])[0]
 
 if selected_report_idx is None:
@@ -121,7 +121,7 @@ else:
             download_file_name = f"{report[TITLE_COLUMN] if TITLE_COLUMN in report and pd.notnull(report[TITLE_COLUMN]) else 'report'}.csv"
             st.download_button(label="📥 다운로드", data=csv_data, file_name=download_file_name, mime="text/csv")
             
-            # 뒤로가기 버튼: 쿼리 파라미터 초기화 후 페이지 리로드
+            # 뒤로가기 버튼: 쿼리 파라미터 초기화 후 페이지 리로드 (st.experimental_set_query_params -> st.set_query_params)
             if st.button("뒤로가기"):
-                st.experimental_set_query_params()
+                st.set_query_params()
                 st.experimental_rerun()

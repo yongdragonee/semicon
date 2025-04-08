@@ -9,7 +9,7 @@ GITHUB_REPORT_URL = st.secrets["REPORT_URL"] + f"?nocache={int(time.time())}"
 @st.cache_data
 def load_report_data(url):
     # encoding='utf-8-sig' 를 추가하여 한글이 올바르게 표시되도록 함
-    df = pd.read_csv(url, encoding='utf-8-sig')
+    df = pd.read_csv(url, encoding='utf-8')
     # 'date' 컬럼이 "date" 또는 "날짜"에 해당하면 datetime 형식으로 변환
     if "date" in df.columns:
         df["date"] = pd.to_datetime(df["date"], errors="coerce")

@@ -19,6 +19,7 @@ data = load_report_data(GITHUB_REPORT_URL)
 # 컬럼명 설정 (제공된 칼럼 기준)
 DATE_COLUMN = "날짜"
 TITLE_COLUMN = "레포트제목"
+SUMMARY_COLUMN_1Line = "1줄 요약"
 SUMMARY_COLUMN = "전체요약"
 ANALYST_COLUMN = "증권사"
 
@@ -64,14 +65,7 @@ def format_report(idx):
         date_str = "날짜 없음"
     # 제목
     title_str = row[TITLE_COLUMN] if TITLE_COLUMN in row and pd.notnull(row[TITLE_COLUMN]) else "제목 없음"
-    # 1줄 요약: 개행 문자로 나눈 첫 줄 사용; 길면 50자로 자름
-    if SUMMARY_COLUMN in row and pd.notnull(row[SUMMARY_COLUMN]):
-        summary_full = row[SUMMARY_COLUMN].strip()
-        summary_line = summary_full.splitlines()[0]
-        one_line_summary = summary_line if len(summary_line) < 50 else summary_line[:50] + "..."
-    else:
-        one_line_summary = "요약 없음"
-    return f"{date_str} - {title_str} - {one_line_summary}"
+    result = f"{date_str} - {title_str}\n{SUMMARY_COLUMN_1Line}"
 
 if data.empty:
     st.write("선택된 필터에 해당하는 레포트가 없습니다.")

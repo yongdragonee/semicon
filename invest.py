@@ -8,8 +8,9 @@ GITHUB_REPORT_URL = st.secrets["REPORT_URL"] + f"?nocache={int(time.time())}"
 # 데이터 로딩 함수 (Streamlit 캐싱 사용)
 @st.cache_data
 def load_report_data(url):
-    df = pd.read_csv(url)
-    # 날짜 컬럼이 "date" 또는 "날짜"에 해당하면 datetime 형식으로 변환
+    # encoding='utf-8-sig' 를 추가하여 한글이 올바르게 표시되도록 함
+    df = pd.read_csv(url, encoding='utf-8-sig')
+    # 'date' 컬럼이 "date" 또는 "날짜"에 해당하면 datetime 형식으로 변환
     if "date" in df.columns:
         df["date"] = pd.to_datetime(df["date"], errors="coerce")
     elif "날짜" in df.columns:
@@ -70,10 +71,10 @@ else:
         title_str = row[TITLE_COLUMN] if TITLE_COLUMN and TITLE_COLUMN in row and pd.notnull(row[TITLE_COLUMN]) else "제목 없음"
         return f"{date_str} - {title_str}"
 
-    # st.selectbox에 데이터프레임의 인덱스 목록을 넣고, format_func를 이용하여 표시 문자열을 생성합니다.
+    # st.selectbox에 데이터프레임의 인덱스 목록을 넣고, format_func를 이용하여 표시 문자열 생성
     selected_idx = st.selectbox("레포트 선택", data.index.tolist(), format_func=format_report)
 
-    # 선택한 레포트에 대한 세부 정보 출력
+    # 선택된 레포트 세부 정보 표시
     report = data.loc[selected_idx]
     
     st.subheader(report[TITLE_COLUMN] if TITLE_COLUMN and TITLE_COLUMN in report else "제목 없음")

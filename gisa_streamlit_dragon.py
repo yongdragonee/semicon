@@ -16,42 +16,53 @@ if not os.path.exists(font_path):
 fontprop = fm.FontProperties(fname=font_path)
 
 # ===============================================
-# 1. CSV 불러오기 함수 (기존 코드와 동일)
+# 1. 뉴스 CSV 불러오기 함수 (날짜 변환, 키워드 처리 포함)
 # ===============================================
-def load_data(csv_url):
+def load_news_data(csv_url):
     df = pd.read_csv(csv_url, encoding='utf-8-sig')
-    df['date'] = pd.to_datetime(df['date'], errors='coerce')
-    df = df.sort_values(by='date', ascending=False)
-    
-    def split_keywords(kw_string):
-        if pd.isna(kw_string):
-            return []
-        return [k.strip() for k in kw_string.split(',') if k.strip()]
-    
-    df['키워드_목록'] = df['키워드'].apply(split_keywords)
-    df = df.explode('키워드_목록', ignore_index=True)
-    df['키워드_목록'] = df['키워드_목록'].replace('관련 없음', '기타')
+    if 'date' in df.columns:
+        df['date'] = pd.to_datetime(df['date'], errors='coerce')
+        df = df.sort_values(by='date', ascending=False)
+    if '키워드' in df.columns:
+        def split_keywords(kw_string):
+            if pd.isna(kw_string):
+                return []
+            return [k.strip() for k in kw_string.split(',') if k.strip()]
+        df['키워드_목록'] = df['키워드'].apply(split_keywords)
+        df = df.explode('키워드_목록', ignore_index=True)
+        df['키워드_목록'] = df['키워드_목록'].replace('관련 없음', '기타')
     return df
 
 # ===============================================
-# 2. 데이터 로드
+# 2. 보고서 CSV 불러오기 함수 (뉴스와 별도 처리)
+# ===============================================
+def load_report_data(csv_url):
+    try:
+        df = pd.read_csv(csv_url, encoding='utf-8-sig')
+    except Exception as e:
+        st.error(f"보고서 데이터를 불러오는 중 오류 발생: {e}")
+        df = pd.DataFrame()
+    return df
+
+# ===============================================
+# 3. 데이터 로드
 # ===============================================
 GITHUB_CSV_URL = st.secrets["CSV_URL"] + f"?nocache={int(time.time())}"
-df = load_data(GITHUB_CSV_URL)
+news_df = load_news_data(GITHUB_CSV_URL)
 
 GITHUB_REPORT_URL = st.secrets["REPORT_URL"] + f"?nocache={int(time.time())}"
-report = load_data(GITHUB_REPORT_URL)
+report_df = load_report_data(GITHUB_REPORT_URL)
 
-# 날짜 범위 초기값 (최근 7일, 1달 등)
-if not df.empty:
-    max_date = df['date'].max()
+# 뉴스 데이터 날짜 범위 초기값 (최근 7일, 1달 등)
+if not news_df.empty and "date" in news_df.columns:
+    max_date = news_df['date'].max()
     one_week_ago = max_date - datetime.timedelta(days=7)
     one_month_ago = max_date - datetime.timedelta(days=30)
 else:
     one_week_ago = one_month_ago = None
 
 # ===============================================
-# 3. 화면 구성
+# 4. 화면 구성
 # ===============================================
 st.subheader("📢 반도체 뉴스레터(Rev.25.3.29)")
 
@@ -61,22 +72,28 @@ date_filter_option = st.sidebar.radio(
     ["최근 7일", "최근 1달", "전체", "직접 선택"],
     index=0
 )
-unique_dates = sorted(list(set(df['date'].dt.date.dropna())), reverse=True)
-if date_filter_option == "최근 7일":
-    selected_dates = [d for d in unique_dates if d >= one_week_ago.date()]
-elif date_filter_option == "최근 1달":
-    selected_dates = [d for d in unique_dates if d >= one_month_ago.date()]
-elif date_filter_option == "전체":
-    selected_dates = unique_dates
+if "date" in news_df.columns:
+    unique_dates = sorted(list(set(news_df['date'].dt.date.dropna())), reverse=True)
+    if date_filter_option == "최근 7일":
+        selected_dates = [d for d in unique_dates if d >= one_week_ago.date()]
+    elif date_filter_option == "최근 1달":
+        selected_dates = [d for d in unique_dates if d >= one_month_ago.date()]
+    elif date_filter_option == "전체":
+        selected_dates = unique_dates
+    else:
+        selected_dates = st.sidebar.multiselect(
+            "📅 날짜를 선택하세요 (복수 선택 가능)",
+            unique_dates,
+            help="필터 옵션에서 '직접 선택'을 선택한 경우에만 활성화됩니다."
+        )
 else:
-    selected_dates = st.sidebar.multiselect(
-        "📅 날짜를 선택하세요 (복수 선택 가능)",
-        unique_dates,
-        help="필터 옵션에서 '직접 선택'을 선택한 경우에만 활성화됩니다."
-    )
+    selected_dates = None
 
 # ---- 사이드바 키워드 필터 ----
-unique_keywords = sorted(list(df['키워드_목록'].dropna().unique()))
+if "키워드_목록" in news_df.columns:
+    unique_keywords = sorted(list(news_df['키워드_목록'].dropna().unique()))
+else:
+    unique_keywords = []
 selected_keywords = st.sidebar.multiselect(
     "🔍 키워드를 선택하세요 (복수 선택 가능)",
     unique_keywords,
@@ -96,12 +113,12 @@ st.sidebar.write("3/13 검색기능 추가")
 st.sidebar.write("3/29 주가현황 추가")
 
 # ===============================================
-# 4. 뉴스 데이터 필터링
+# 5. 뉴스 데이터 필터링
 # ===============================================
-filtered_df = df.copy()
-if selected_dates:
+filtered_df = news_df.copy()
+if selected_dates and "date" in filtered_df.columns:
     filtered_df = filtered_df[filtered_df['date'].dt.date.isin(selected_dates)]
-if selected_keywords:
+if selected_keywords and "키워드_목록" in filtered_df.columns:
     filtered_df = filtered_df[filtered_df['키워드_목록'].isin(selected_keywords)]
 if search_query:
     search_query_lower = search_query.lower()
@@ -112,13 +129,16 @@ if search_query:
 st.write(f"**총 기사 수:** {len(filtered_df)}개")
 
 # ===============================================
-# 5. 첨부파일(Report) 표시 (주가현황 위에 drop-down)
+# 6. 첨부파일(Report) 표시 (주가현황 위에 drop-down)
 # ===============================================
 with st.expander("첨부파일 보고서 보기", expanded=False):
-    st.dataframe(report)  # st.table(report)로 변경 가능
+    if not report_df.empty:
+        st.dataframe(report_df)  # st.table(report_df)로 정적 테이블 형태로 표시 가능
+    else:
+        st.write("보고서 데이터를 불러올 수 없습니다.")
 
 # ===============================================
-# 6. 주가 정보 조회 - yfinance 사용 (최근 1년)
+# 7. 주가 정보 조회 - yfinance 사용 (최근 1년)
 # ===============================================
 st.subheader("📈 주가 현황")
 today = datetime.date.today()
@@ -375,22 +395,25 @@ with st.expander("주가 변동률 표 보기", expanded=False):
         st.error(f"전체 정규화 그래프를 그리는 중 오류 발생: {e}")
 
 # ===============================================
-# 7. 뉴스 출력
+# 8. 뉴스 출력
 # ===============================================
-grouped_by_date = filtered_df.groupby(filtered_df['date'].dt.date, sort=False)
-for current_date, date_group in grouped_by_date:
-    st.markdown(f"## {current_date.strftime('%Y-%m-%d')}")
-    grouped_by_keyword = date_group.groupby('키워드_목록', sort=False)
-    for keyword_value, keyword_group in grouped_by_keyword:
-        if pd.notna(keyword_value) and str(keyword_value).strip():
-            st.markdown(f"### ▶️ {keyword_value}")
-        else:
-            st.markdown("### ▶️ (키워드 없음)")
-        for idx, row in keyword_group.iterrows():
-            with st.expander(f"📰 {row['title']}"):
-                st.write(f"**요약:** {row.get('summary', '요약 정보가 없습니다.')}")
-                link = row.get('link', None)
-                if pd.notna(link):
-                    st.markdown(f"[🔗 기사 링크]({link})")
-                else:
-                    st.write("링크가 없습니다.")
+if "date" in filtered_df.columns:
+    grouped_by_date = filtered_df.groupby(filtered_df['date'].dt.date, sort=False)
+    for current_date, date_group in grouped_by_date:
+        st.markdown(f"## {current_date.strftime('%Y-%m-%d')}")
+        grouped_by_keyword = date_group.groupby('키워드_목록', sort=False)
+        for keyword_value, keyword_group in grouped_by_keyword:
+            if pd.notna(keyword_value) and str(keyword_value).strip():
+                st.markdown(f"### ▶️ {keyword_value}")
+            else:
+                st.markdown("### ▶️ (키워드 없음)")
+            for idx, row in keyword_group.iterrows():
+                with st.expander(f"📰 {row['title']}"):
+                    st.write(f"**요약:** {row.get('summary', '요약 정보가 없습니다.')}")
+                    link = row.get('link', None)
+                    if pd.notna(link):
+                        st.markdown(f"[🔗 기사 링크]({link})")
+                    else:
+                        st.write("링크가 없습니다.")
+else:
+    st.write("표시할 뉴스 데이터가 없습니다.")

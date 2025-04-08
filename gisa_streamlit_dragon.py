@@ -39,6 +39,9 @@ def load_data(csv_url):
 GITHUB_CSV_URL = st.secrets["CSV_URL"] + f"?nocache={int(time.time())}"
 df = load_data(GITHUB_CSV_URL)
 
+GITHUB_REPORT_URL = st.secrets["REPORT_URL"] + f"?nocache={int(time.time())}"
+report = load_data(GITHUB_REPORT_URL)
+
 # 날짜 범위 초기값 (최근 7일, 1달 등)
 if not df.empty:
     max_date = df['date'].max()

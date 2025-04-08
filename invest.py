@@ -32,12 +32,16 @@ if 'sector' in data.columns:
     selected_sectors = st.sidebar.multiselect("업종 선택", sectors, default=sectors)
     data = data[data['sector'].isin(selected_sectors)]
 
+# 키워드 검색 (제목, 요약 컬럼이 존재하는 경우만 적용)
 keyword = st.sidebar.text_input("키워드 검색 (제목, 요약)")
 if keyword:
-    data = data[
-        data['title'].str.contains(keyword, case=False, na=False) |
-        data['summary'].str.contains(keyword, case=False, na=False)
-    ]
+    condition = pd.Series(False, index=data.index)
+    if 'title' in data.columns:
+        condition |= data['title'].str.contains(keyword, case=False, na=False)
+    if 'summary' in data.columns:
+        condition |= data['summary'].str.contains(keyword, case=False, na=False)
+    # 조건에 해당하는 데이터만 filtering
+    data = data[condition]
 
 st.title("증권 레포트 모음")
 st.write("좌측 목록에서 레포트를 선택하세요.")
@@ -49,12 +53,12 @@ else:
     def format_report(idx):
         row = data.loc[idx]
         # 'date' 컬럼이 존재하고 값이 있으면 날짜 문자열 생성, 없으면 "No Date"
-        if 'date' in data.columns and pd.notnull(row['date']):
+        if 'date' in data.columns and pd.notnull(row.get('date')):
             date_str = row['date'].strftime('%Y-%m-%d')
         else:
             date_str = "No Date"
         # 'title' 컬럼이 존재하면 제목 사용, 없으면 "제목 없음"
-        title_str = row['title'] if 'title' in data.columns else "제목 없음"
+        title_str = row.get('title', "제목 없음")
         return f"{date_str} - {title_str}"
 
     # st.selectbox에 데이터프레임의 인덱스 목록을 넣고, format_func를 이용하여 표시 문자열 생성

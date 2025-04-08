@@ -23,6 +23,8 @@ if st.button('분석하기'):
             st.success('긍정적인 텍스트입니다.')
         elif compound_score <= -0.05:
             st.error('부정적인 텍스트입니다.')
+        elif compound_score = 0:
+            st.error('작동안하는듯')
         else:
             st.warning('중립적인 텍스트입니다.')
     else:

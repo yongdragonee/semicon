@@ -58,7 +58,7 @@ if keyword:
 st.title("증권 레포트 모음")
 st.write("아래 목록에서 expander를 눌러 레포트 세부 내용을 확인하세요.")
 
-# 각 레포트의 헤더(날짜, 제목, 1줄 요약) 반환 함수
+# 각 레포트의 헤더(날짜, 제목, 1줄 요약, 키워드) 반환 함수
 def format_report(idx):
     row = data.loc[idx]
     
@@ -84,9 +84,7 @@ def format_report(idx):
     else:
         keywords = "키워드 없음"
     
-    return f"{date_str} - {title_str}\n{one_line_summary}\n{keywords}"
-
-
+    return f"{date_str} - {title_str}\n{one_line_summary}\n키워드: {keywords}"
 
 if data.empty:
     st.write("선택된 필터에 해당하는 레포트가 없습니다.")
@@ -121,21 +119,21 @@ else:
                 st.write("**키워드**")
                 st.write(report[KEYWORDS_COLUMN] if pd.notnull(report[KEYWORDS_COLUMN]) else "키워드 정보가 없습니다.")
             
-            # link 출력
-            if LINK_COLUMN in report:
-                st.write("**link**")
-                st.write(report[LINK_COLUMN] if pd.notnull(report[LINK_COLUMN]) else "링크 정보가 없습니다.")
-            
             # 파일크기 출력
             if FILESIZE_COLUMN in report:
                 st.write("**파일크기**")
                 st.write(report[FILESIZE_COLUMN] if pd.notnull(report[FILESIZE_COLUMN]) else "파일크기 정보가 없습니다.")
             
-            # 첨부파일 아이콘 버튼 (클릭 시 안내 메시지 출력)
-            if st.button("📎 첨부파일", key=f"attachment_{idx}"):
-                st.info("첨부파일 기능은 별도 구현이 필요합니다.")
+            # 첨부파일 아이콘 버튼과 link 연결: 버튼 클릭 시 해당 link로 이동 (새 탭에서 열림)
+            if LINK_COLUMN in report and pd.notnull(report[LINK_COLUMN]):
+                st.markdown(
+                    f'<a href="{report[LINK_COLUMN]}" target="_blank"><button>📎 첨부파일</button></a>',
+                    unsafe_allow_html=True
+                )
+            else:
+                st.write("링크 정보가 없습니다.")
             
             # CSV 다운로드 버튼: 선택된 레포트를 CSV 형식으로 다운로드 (전체 칼럼 포함)
-            csv_data = report.to_csv(index=False)
-            download_file_name = f"{report[TITLE_COLUMN] if TITLE_COLUMN in report and pd.notnull(report[TITLE_COLUMN]) else 'report'}.csv"
-            st.download_button(label="📥 다운로드", data=csv_data, file_name=download_file_name, mime="text/csv", key=f"download_{idx}")
+            #csv_data = report.to_csv(index=False)
+            #download_file_name = f"{report[TITLE_COLUMN] if TITLE_COLUMN in report and pd.notnull(report[TITLE_COLUMN]) else 'report'}.csv"
+            #st.download_button(label="📥 다운로드", data=csv_data, file_name=download_file_name, mime="text/csv", key=f"download_{idx}")

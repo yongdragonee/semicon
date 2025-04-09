@@ -98,7 +98,8 @@ def format_report(idx):
         <summary>
           <span style="font-size: 20px;"><b>{date_str} - {title_str}</b></span><br>
           <span style="font-size: 17px;">
-            📌 {one_line_summary}<br>
+            📌 {one_line_summary}<br> </span>
+          <span style="font-size: 14px;"> 
             🔑 {keywords}<br>
             💾 {filesize_info} Byte
           </span>

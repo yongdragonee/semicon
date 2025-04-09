@@ -1,4 +1,3 @@
-첨부파일 보고서 보기 누르면 테이블 나오기 전에 https://semi-invest.streamlit.app/ 링크를 표기해줘
 
 import streamlit as st
 import pandas as pd
@@ -134,10 +133,15 @@ st.write(f"**총 기사 수:** {len(filtered_df)}개")
 # 6. 첨부파일(Report) 표시 (주가현황 위에 drop-down)
 # ===============================================
 with st.expander("첨부파일 보고서 보기", expanded=False):
+    # 링크를 먼저 표기합니다.
+    st.markdown("[https://semi-invest.streamlit.app/](https://semi-invest.streamlit.app/)")
+    
+    # 이후 보고서 테이블을 표시합니다.
     if not report_df.empty:
-        st.dataframe(report_df)  # st.table(report_df)로 정적 테이블 형태로 표시 가능
+        st.dataframe(report_df)  # 또는 st.table(report_df)로 정적 테이블 형태로 표시 가능
     else:
         st.write("보고서 데이터를 불러올 수 없습니다.")
+
 
 # ===============================================
 # 7. 주가 정보 조회 - yfinance 사용 (최근 1년)

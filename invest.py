@@ -95,12 +95,15 @@ def format_report(idx):
 
     html = f"""
     <details>
-      <summary>
-        <b>{date_str} - {title_str}</b><br>
-        <small>📌 {one_line_summary}<br>🔑 {keywords}</small>
-      </summary>
+        <summary>
+          <span style="font-size: 12px;"><b>{date_str} - {title_str}</b></span><br>
+          <span style="font-size: 12px; color: gray;">
+            📌 {one_line_summary}<br>
+            🔑 {keywords}
+          </span>
+        </summary>
       <div style='margin-top: 11px; padding-left: 11px;'>
-        <p><b>전체요약:</b> {full_summary}</p>
+        <p><b>전체요약:<br></b> {full_summary}</p>
         <p><b>증권사:</b> {analyst_info}</p>
         <p><b>파일크기:</b> {filesize_info}</p>
         {link_html}

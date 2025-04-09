@@ -99,7 +99,7 @@ def format_report(idx):
         <b>{date_str} - {title_str}</b><br>
         <small>📌 {one_line_summary}<br>🔑 {keywords}</small>
       </summary>
-      <div style='margin-top: 10px; padding-left: 10px;'>
+      <div style='margin-top: 11px; padding-left: 11px;'>
         <h4># 데이터 출력</h4>
         <p><b>전체요약:</b> {full_summary}</p>
         <p><b>증권사:</b> {analyst_info}</p>
@@ -118,8 +118,8 @@ else:
         st.markdown(format_report(idx), unsafe_allow_html=True)
         
         # CSV 다운로드 버튼 (HTML 영역과 별개로 인터랙티브하게 구성)
-        report = data.loc[idx]
-        csv_data = report.to_csv(index=False)
-        download_file_name = f"{report[TITLE_COLUMN] if pd.notnull(report[TITLE_COLUMN]) else 'report'}.csv"
-        st.download_button(label="📥 다운로드", data=csv_data, file_name=download_file_name, mime="text/csv", key=f"download_{idx}")
-        st.markdown("---")
+        #report = data.loc[idx]
+        #csv_data = report.to_csv(index=False)
+        #download_file_name = f"{report[TITLE_COLUMN] if pd.notnull(report[TITLE_COLUMN]) else 'report'}.csv"
+        #st.download_button(label="📥 다운로드", data=csv_data, file_name=download_file_name, mime="text/csv", key=f"download_{idx}")
+        #st.markdown("---")

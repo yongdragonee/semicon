@@ -7,16 +7,14 @@ GITHUB_REPORT_URL = st.secrets["REPORT_URL"] + f"?nocache={int(time.time())}"
 
 @st.cache_data
 def load_report_data(url):
-    # 한글이 올바르게 표시되도록 encoding 지정
     df = pd.read_csv(url, encoding='utf-8-sig')
     if "날짜" in df.columns:
         df["날짜"] = pd.to_datetime(df["날짜"], errors="coerce")
     return df
 
-# 데이터 불러오기 (CSV의 전체 9개 칼럼 포함)
 data = load_report_data(GITHUB_REPORT_URL)
 
-# 전체 9개 칼럼 (날짜, 증권사, 레포트제목, 레포트본문전체, 전체요약, 1줄 요약, 키워드, link, 파일크기)
+# 전체 칼럼 정의
 DATE_COLUMN = "날짜"
 ANALYST_COLUMN = "증권사"
 TITLE_COLUMN = "레포트제목"
@@ -27,10 +25,10 @@ KEYWORDS_COLUMN = "키워드"
 LINK_COLUMN = "link"
 FILESIZE_COLUMN = "파일크기"
 
-# 사이드바 - 필터 옵션
+# ---------------------- 사이드바 필터 ----------------------
 st.sidebar.header("필터 옵션")
 
-# 1. 날짜 필터링
+# 날짜 필터링
 if DATE_COLUMN in data.columns:
     min_date = data[DATE_COLUMN].min()
     max_date = data[DATE_COLUMN].max()
@@ -39,13 +37,13 @@ if DATE_COLUMN in data.columns:
         start_date, end_date = date_range
         data = data[(data[DATE_COLUMN] >= pd.Timestamp(start_date)) & (data[DATE_COLUMN] <= pd.Timestamp(end_date))]
 
-# 2. 증권사 필터링
+# 증권사 필터링
 if ANALYST_COLUMN in data.columns:
     securities = data[ANALYST_COLUMN].unique().tolist()
     selected_securities = st.sidebar.multiselect("증권사 선택", securities, default=securities)
     data = data[data[ANALYST_COLUMN].isin(selected_securities)]
 
-# 3. 키워드 검색 (레포트제목, 전체요약)
+# 키워드 검색
 keyword = st.sidebar.text_input("키워드 검색 (레포트제목, 전체요약)")
 if keyword:
     condition = pd.Series(False, index=data.index)
@@ -55,85 +53,54 @@ if keyword:
         condition |= data[SUMMARY_COLUMN].str.contains(keyword, case=False, na=False)
     data = data[condition]
 
-st.title("증권 레포트 모음")
-st.write("아래 목록에서 expander를 눌러 레포트 세부 내용을 확인하세요.")
-
-# 각 레포트의 헤더(날짜, 제목, 1줄 요약, 키워드) 반환 함수
-def format_report(idx):
-    row = data.loc[idx]
-    
-    # 날짜 포맷팅
-    if DATE_COLUMN in row and pd.notnull(row[DATE_COLUMN]):
-        date_val = row[DATE_COLUMN]
-        date_str = date_val.strftime('%Y-%m-%d') if isinstance(date_val, pd.Timestamp) else str(date_val)
-    else:
-        date_str = "날짜 없음"
-    
-    # 제목
-    title_str = row[TITLE_COLUMN] if TITLE_COLUMN in row and pd.notnull(row[TITLE_COLUMN]) else "제목 없음"
-    
-    # 1줄 요약
-    if SUMMARY_COLUMN_1LINE in row and pd.notnull(row[SUMMARY_COLUMN_1LINE]):
-        one_line_summary = row[SUMMARY_COLUMN_1LINE].strip()
-    else:
-        one_line_summary = "요약 없음"
-    
-    # 키워드
-    if KEYWORDS_COLUMN in row and pd.notnull(row[KEYWORDS_COLUMN]):
-        keywords = row[KEYWORDS_COLUMN].strip()
-    else:
-        keywords = "키워드 없음"
-    
-    return f"{date_str} - {title_str}|{one_line_summary}|키워드: {keywords}"
+# ---------------------- 본문 ----------------------
+st.title("📊 증권 레포트 모음")
+st.write("아래 목록에서 ▾ 버튼을 눌러 레포트 세부 내용을 확인하세요.")
 
 if data.empty:
     st.write("선택된 필터에 해당하는 레포트가 없습니다.")
 else:
-    # 각 레포트를 expander 형태로 출력
     for idx in data.index:
-        header_line = format_report(idx)
-        with st.expander(header_line, expanded=False):
-            report = data.loc[idx]
+        row = data.loc[idx]
 
-            # 레포트 제목
-            st.subheader(report[TITLE_COLUMN] if TITLE_COLUMN in report and pd.notnull(report[TITLE_COLUMN]) else "제목 없음")
-            
-            # 날짜 출력
-            if DATE_COLUMN in report:
-                if pd.notnull(report[DATE_COLUMN]):
-                    date_text = report[DATE_COLUMN].strftime('%Y-%m-%d') if isinstance(report[DATE_COLUMN], pd.Timestamp) else str(report[DATE_COLUMN])
-                else:
-                    date_text = "날짜 없음"
-                st.text("날짜: " + date_text)
-            
-            # 증권사 출력
-            if ANALYST_COLUMN in report:
-                st.text("증권사: " + str(report[ANALYST_COLUMN]))
-            
-            # 전체요약 출력
-            st.write("**전체요약**")
-            st.write(report[SUMMARY_COLUMN] if SUMMARY_COLUMN in report and pd.notnull(report[SUMMARY_COLUMN]) else "요약 정보가 없습니다.")
-            
-            # 키워드 출력
-            if KEYWORDS_COLUMN in report:
-                st.write("**키워드**")
-                st.write(report[KEYWORDS_COLUMN] if pd.notnull(report[KEYWORDS_COLUMN]) else "키워드 정보가 없습니다.")
-            
-            # 파일크기 출력
-            if FILESIZE_COLUMN in report:
-                st.write("**파일크기**")
-                st.write(report[FILESIZE_COLUMN] if pd.notnull(report[FILESIZE_COLUMN]) else "파일크기 정보가 없습니다.")
-            
-            # 첨부파일 아이콘 버튼과 link 연결: 버튼 클릭 시 해당 link로 이동 (새 탭에서 열림)
-            if LINK_COLUMN in report and pd.notnull(report[LINK_COLUMN]):
+        # 헤더: 날짜 + 제목만 간결하게
+        date_str = row[DATE_COLUMN].strftime('%Y-%m-%d') if pd.notnull(row[DATE_COLUMN]) else "날짜 없음"
+        title_str = row[TITLE_COLUMN] if pd.notnull(row[TITLE_COLUMN]) else "제목 없음"
+        header_line = f"{date_str} - {title_str}"
+
+        with st.expander(header_line, expanded=False):
+            # 1줄 요약
+            one_line_summary = row[SUMMARY_COLUMN_1LINE].strip() if pd.notnull(row[SUMMARY_COLUMN_1LINE]) else "요약 없음"
+            st.markdown(f"📌 **1줄 요약**\n{one_line_summary}")
+
+            # 키워드
+            keywords = row[KEYWORDS_COLUMN].strip() if pd.notnull(row[KEYWORDS_COLUMN]) else "키워드 없음"
+            st.markdown(f"🔎 **키워드**\n{keywords}")
+
+            # 날짜
+            st.text(f"📅 날짜: {date_str}")
+
+            # 증권사
+            st.text(f"🏢 증권사: {row[ANALYST_COLUMN] if pd.notnull(row[ANALYST_COLUMN]) else '정보 없음'}")
+
+            # 전체요약
+            st.markdown("🧾 **전체요약**")
+            st.write(row[SUMMARY_COLUMN] if pd.notnull(row[SUMMARY_COLUMN]) else "요약 정보가 없습니다.")
+
+            # 파일크기
+            if pd.notnull(row[FILESIZE_COLUMN]):
+                st.text(f"📁 파일크기: {row[FILESIZE_COLUMN]}")
+
+            # 링크 버튼 (있을 때만)
+            if pd.notnull(row[LINK_COLUMN]):
                 st.markdown(
-                    f'<a href="{report[LINK_COLUMN]}" target="_blank"><button>📎 첨부파일</button></a>',
+                    f'<a href="{row[LINK_COLUMN]}" target="_blank"><button>📎 첨부파일 열기</button></a>',
                     unsafe_allow_html=True
                 )
             else:
-                st.write("링크 정보가 없습니다.")
-            
-            # CSV 다운로드 버튼: 선택된 레포트를 CSV 형식으로 다운로드 (전체 칼럼 포함)
-            #csv_data = report.to_csv(index=False)
-            #download_file_name = f"{report[TITLE_COLUMN] if TITLE_COLUMN in report and pd.notnull(report[TITLE_COLUMN]) else 'report'}.csv"
-            #st.download_button(label="📥 다운로드", data=csv_data, file_name=download_file_name, mime="text/csv", key=f"download_{idx}")
+                st.text("🔗 링크 없음")
+
+            # CSV 다운로드 버튼
+            csv_data = row.to_csv(index=False)
+            file_name = f"{title_str}.csv"
+            st.download_button(label="📥 다운로드", data=csv_data, file_name=file_name, mime="text/csv", key=f"download_{idx}")

@@ -61,30 +61,35 @@ st.write("아래 목록에서 expander를 눌러 레포트 세부 내용을 확�
 # 각 레포트의 헤더(날짜, 제목, 1줄 요약, 키워드) 반환 함수
 def format_report(idx):
     row = data.loc[idx]
-    
-    # 날짜 포맷팅
+
+    # 날짜 포맷
     if DATE_COLUMN in row and pd.notnull(row[DATE_COLUMN]):
         date_val = row[DATE_COLUMN]
         date_str = date_val.strftime('%Y-%m-%d') if isinstance(date_val, pd.Timestamp) else str(date_val)
     else:
         date_str = "날짜 없음"
-    
+
     # 제목
-    title_str = row[TITLE_COLUMN] if TITLE_COLUMN in row and pd.notnull(row[TITLE_COLUMN]) else "제목 없음"
-    
+    title_str = row[TITLE_COLUMN] if pd.notnull(row[TITLE_COLUMN]) else "제목 없음"
+
     # 1줄 요약
-    if SUMMARY_COLUMN_1LINE in row and pd.notnull(row[SUMMARY_COLUMN_1LINE]):
-        one_line_summary = row[SUMMARY_COLUMN_1LINE].strip()
-    else:
-        one_line_summary = "요약 없음"
-    
+    one_line_summary = row[SUMMARY_COLUMN_1LINE].strip() if pd.notnull(row[SUMMARY_COLUMN_1LINE]) else "요약 없음"
+
     # 키워드
-    if KEYWORDS_COLUMN in row and pd.notnull(row[KEYWORDS_COLUMN]):
-        keywords = row[KEYWORDS_COLUMN].strip()
-    else:
-        keywords = "키워드 없음"
-    
-    return f"{date_str} - {title_str}|{one_line_summary}|키워드: {keywords}"
+    keywords = row[KEYWORDS_COLUMN].strip() if pd.notnull(row[KEYWORDS_COLUMN]) else "키워드 없음"
+
+    # HTML 기반 summary with 줄바꿈
+    html = f"""
+    <details>
+      <summary><b>{date_str} - {title_str}</b></summary>
+      <div style='margin-top: 10px;'>
+        📌 <b>1줄 요약:</b><br>{one_line_summary}<br><br>
+        🔑 <b>키워드:</b><br>{keywords}
+      </div>
+    </details>
+    """
+    return html
+
 
 if data.empty:
     st.write("선택된 필터에 해당하는 레포트가 없습니다.")

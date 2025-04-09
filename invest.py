@@ -61,20 +61,32 @@ st.write("아래 목록에서 expander를 눌러 레포트 세부 내용을 확�
 # 각 레포트의 헤더(날짜, 제목, 1줄 요약) 반환 함수
 def format_report(idx):
     row = data.loc[idx]
+    
     # 날짜 포맷팅
     if DATE_COLUMN in row and pd.notnull(row[DATE_COLUMN]):
         date_val = row[DATE_COLUMN]
         date_str = date_val.strftime('%Y-%m-%d') if isinstance(date_val, pd.Timestamp) else str(date_val)
     else:
         date_str = "날짜 없음"
+    
     # 제목
     title_str = row[TITLE_COLUMN] if TITLE_COLUMN in row and pd.notnull(row[TITLE_COLUMN]) else "제목 없음"
+    
     # 1줄 요약
     if SUMMARY_COLUMN_1LINE in row and pd.notnull(row[SUMMARY_COLUMN_1LINE]):
         one_line_summary = row[SUMMARY_COLUMN_1LINE].strip()
     else:
         one_line_summary = "요약 없음"
-    return f"{date_str} - {title_str} - {one_line_summary}"
+    
+    # 키워드
+    if KEYWORDS_COLUMN in row and pd.notnull(row[KEYWORDS_COLUMN]):
+        keywords = row[KEYWORDS_COLUMN].strip()
+    else:
+        keywords = "키워드 없음"
+    
+    return f"{date_str} - {title_str}\n{one_line_summary}\n{keywords}"
+
+
 
 if data.empty:
     st.write("선택된 필터에 해당하는 레포트가 없습니다.")
@@ -103,11 +115,6 @@ else:
             # 전체요약 출력
             st.write("**전체요약**")
             st.write(report[SUMMARY_COLUMN] if SUMMARY_COLUMN in report and pd.notnull(report[SUMMARY_COLUMN]) else "요약 정보가 없습니다.")
-            
-            # 레포트본문전체 출력
-            if FULL_TEXT_COLUMN in report:
-                st.write("**레포트본문전체**")
-                st.write(report[FULL_TEXT_COLUMN] if pd.notnull(report[FULL_TEXT_COLUMN]) else "본문 정보가 없습니다.")
             
             # 키워드 출력
             if KEYWORDS_COLUMN in report:

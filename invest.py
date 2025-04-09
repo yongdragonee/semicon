@@ -96,7 +96,7 @@ def format_report(idx):
     html = f"""
     <details>
         <summary>
-          <span style="font-size: 17px;"><b>{date_str} - {title_str}</b></span><br>
+          <span style="font-size: 20px;"><b>{date_str} - {title_str}</b></span><br>
           <span style="font-size: 17px;">
             📌 {one_line_summary}<br>
             🔑 {keywords}

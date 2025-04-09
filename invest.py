@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit as st 
 import pandas as pd
 import time
 
@@ -13,15 +13,19 @@ def load_report_data(url):
         df["날짜"] = pd.to_datetime(df["날짜"], errors="coerce")
     return df
 
-# 데이터 불러오기
+# 데이터 불러오기 (CSV의 전체 9개 칼럼 포함)
 data = load_report_data(GITHUB_REPORT_URL)
 
-# 컬럼명 설정 (제공된 칼럼 기준)
+# 전체 9개 칼럼 (날짜, 증권사, 레포트제목, 레포트본문전체, 전체요약, 1줄 요약, 키워드, link, 파일크기)
 DATE_COLUMN = "날짜"
-TITLE_COLUMN = "레포트제목"
-SUMMARY_COLUMN = "전체요약"
-SUMMARY_COLUMN_1LINE = "1줄 요약"  # CSV 파일에 이미 존재하는 1줄 요약 칼럼
 ANALYST_COLUMN = "증권사"
+TITLE_COLUMN = "레포트제목"
+FULL_TEXT_COLUMN = "레포트본문전체"
+SUMMARY_COLUMN = "전체요약"
+SUMMARY_COLUMN_1LINE = "1줄 요약"
+KEYWORDS_COLUMN = "키워드"
+LINK_COLUMN = "link"
+FILESIZE_COLUMN = "파일크기"
 
 # 사이드바 - 필터 옵션
 st.sidebar.header("필터 옵션")
@@ -36,10 +40,10 @@ if DATE_COLUMN in data.columns:
         data = data[(data[DATE_COLUMN] >= pd.Timestamp(start_date)) & (data[DATE_COLUMN] <= pd.Timestamp(end_date))]
 
 # 2. 증권사 필터링
-if "증권사" in data.columns:
-    securities = data["증권사"].unique().tolist()
+if ANALYST_COLUMN in data.columns:
+    securities = data[ANALYST_COLUMN].unique().tolist()
     selected_securities = st.sidebar.multiselect("증권사 선택", securities, default=securities)
-    data = data[data["증권사"].isin(selected_securities)]
+    data = data[data[ANALYST_COLUMN].isin(selected_securities)]
 
 # 3. 키워드 검색 (레포트제목, 전체요약)
 keyword = st.sidebar.text_input("키워드 검색 (레포트제목, 전체요약)")
@@ -54,7 +58,7 @@ if keyword:
 st.title("증권 레포트 모음")
 st.write("아래 목록에서 expander를 눌러 레포트 세부 내용을 확인하세요.")
 
-# 각 레포트의 날짜, 제목, 1줄 요약을 반환하는 함수 (1줄 요약은 CSV의 SUMMARY_COLUMN_1LINE 칼럼을 사용)
+# 각 레포트의 헤더(날짜, 제목, 1줄 요약) 반환 함수
 def format_report(idx):
     row = data.loc[idx]
     # 날짜 포맷팅
@@ -65,7 +69,7 @@ def format_report(idx):
         date_str = "날짜 없음"
     # 제목
     title_str = row[TITLE_COLUMN] if TITLE_COLUMN in row and pd.notnull(row[TITLE_COLUMN]) else "제목 없음"
-    # 1줄 요약: CSV 파일의 "1줄 요약" 칼럼 사용
+    # 1줄 요약
     if SUMMARY_COLUMN_1LINE in row and pd.notnull(row[SUMMARY_COLUMN_1LINE]):
         one_line_summary = row[SUMMARY_COLUMN_1LINE].strip()
     else:
@@ -80,28 +84,51 @@ else:
         header_line = format_report(idx)
         with st.expander(header_line, expanded=False):
             report = data.loc[idx]
+
             # 레포트 제목
             st.subheader(report[TITLE_COLUMN] if TITLE_COLUMN in report and pd.notnull(report[TITLE_COLUMN]) else "제목 없음")
-            # 날짜
+            
+            # 날짜 출력
             if DATE_COLUMN in report:
                 if pd.notnull(report[DATE_COLUMN]):
                     date_text = report[DATE_COLUMN].strftime('%Y-%m-%d') if isinstance(report[DATE_COLUMN], pd.Timestamp) else str(report[DATE_COLUMN])
                 else:
                     date_text = "날짜 없음"
                 st.text("날짜: " + date_text)
-            # 증권사
+            
+            # 증권사 출력
             if ANALYST_COLUMN in report:
                 st.text("증권사: " + str(report[ANALYST_COLUMN]))
             
-            # 전체 요약 (세부 내용)
+            # 전체요약 출력
             st.write("**전체요약**")
             st.write(report[SUMMARY_COLUMN] if SUMMARY_COLUMN in report and pd.notnull(report[SUMMARY_COLUMN]) else "요약 정보가 없습니다.")
+            
+            # 레포트본문전체 출력
+            if FULL_TEXT_COLUMN in report:
+                st.write("**레포트본문전체**")
+                st.write(report[FULL_TEXT_COLUMN] if pd.notnull(report[FULL_TEXT_COLUMN]) else "본문 정보가 없습니다.")
+            
+            # 키워드 출력
+            if KEYWORDS_COLUMN in report:
+                st.write("**키워드**")
+                st.write(report[KEYWORDS_COLUMN] if pd.notnull(report[KEYWORDS_COLUMN]) else "키워드 정보가 없습니다.")
+            
+            # link 출력
+            if LINK_COLUMN in report:
+                st.write("**link**")
+                st.write(report[LINK_COLUMN] if pd.notnull(report[LINK_COLUMN]) else "링크 정보가 없습니다.")
+            
+            # 파일크기 출력
+            if FILESIZE_COLUMN in report:
+                st.write("**파일크기**")
+                st.write(report[FILESIZE_COLUMN] if pd.notnull(report[FILESIZE_COLUMN]) else "파일크기 정보가 없습니다.")
             
             # 첨부파일 아이콘 버튼 (클릭 시 안내 메시지 출력)
             if st.button("📎 첨부파일", key=f"attachment_{idx}"):
                 st.info("첨부파일 기능은 별도 구현이 필요합니다.")
             
-            # CSV 다운로드 버튼: 선택된 레포트를 CSV 형식으로 다운로드
+            # CSV 다운로드 버튼: 선택된 레포트를 CSV 형식으로 다운로드 (전체 칼럼 포함)
             csv_data = report.to_csv(index=False)
             download_file_name = f"{report[TITLE_COLUMN] if TITLE_COLUMN in report and pd.notnull(report[TITLE_COLUMN]) else 'report'}.csv"
             st.download_button(label="📥 다운로드", data=csv_data, file_name=download_file_name, mime="text/csv", key=f"download_{idx}")

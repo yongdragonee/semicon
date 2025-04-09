@@ -84,7 +84,7 @@ def format_report(idx):
     else:
         keywords = "키워드 없음"
     
-    return f"{date_str} - {title_str}\n{one_line_summary}\n키워드: {keywords}"
+    return f"{date_str} - {title_str}|{one_line_summary}|키워드: {keywords}"
 
 if data.empty:
     st.write("선택된 필터에 해당하는 레포트가 없습니다.")

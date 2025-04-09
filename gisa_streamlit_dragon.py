@@ -132,7 +132,7 @@ st.write(f"**총 기사 수:** {len(filtered_df)}개")
 # ===============================================
 # 6. 첨부파일(Report) 표시 (주가현황 위에 drop-down)
 # ===============================================
-with st.expander("증권레포트 레터", expanded=False):
+with st.expander("📊증권레포트", expanded=False):
     # 링크를 먼저 표기합니다.
     st.markdown("[https://semi-invest.streamlit.app/](https://semi-invest.streamlit.app/)")
     

@@ -1,3 +1,5 @@
+첨부파일 보고서 보기 누르면 테이블 나오기 전에 https://semi-invest.streamlit.app/ 링크를 표기해줘
+
 import streamlit as st
 import pandas as pd
 import datetime

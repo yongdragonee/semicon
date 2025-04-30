@@ -1,4 +1,5 @@
 import streamlit as st
+st.set_page_config(page_title="반도체 뉴스레터", layout="wide")   # ← 반드시 첫 st.* 호출
 import pandas as pd
 import datetime
 import time
@@ -89,7 +90,7 @@ else:
 # ───────────────────────────────────────────────
 # 4. 화면 구성
 # ───────────────────────────────────────────────
-st.set_page_config(page_title="반도체 뉴스레터", layout="wide")
+
 st.subheader("📢 반도체 뉴스레터 (Rev.25.3.29)")
 
 # ---- 사이드바: 날짜 / 키워드 / 검색 ----

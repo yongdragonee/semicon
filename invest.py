@@ -55,7 +55,7 @@ if keyword:
         condition |= data[SUMMARY_COLUMN].str.contains(keyword, case=False, na=False)
     data = data[condition]
 
-st.title("📊 증권 레포트 모음")
+st.title("📊 증권 레포트 모음(Ver.25.5.1)")
 st.write("아래 목록에서 제목을 클릭하면 상세 내용이 펼쳐집니다.")
 
 def format_report(idx):

@@ -31,7 +31,7 @@ def load_news_data(csv_url: str) -> pd.DataFrame:
                              .fillna('')
                              .apply(lambda s: [k.strip() for k in s.split(',') if k.strip()]))
         df = df.explode('키워드_목록', ignore_index=True)
-        df['키워드_목록'].replace('관련 없음', '기타', inplace=True)
+        df['키워드_목록'] = df['키워드_목록'].replace('관련 없음', '기타')
     return df
 
 

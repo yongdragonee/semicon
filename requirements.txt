@@ -17,4 +17,4 @@ yfinance
 matplotlib
 nltk
 wordcloud
-FinanceDataReader
+finance-datareader

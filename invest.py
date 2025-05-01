@@ -106,7 +106,7 @@ def format_report(idx):
         </summary>
       <div style='margin-top: 11px; padding-left: 11px;'>
         <p>
-         <b>전체요약:</b><br><!-- --><br>
+         <b>전체요약:</b><br><!-- -->
          {full_summary}
         </p>
         <p><b>증권사:</b> {analyst_info}</p>

@@ -152,159 +152,160 @@ with st.expander("📊 증권 레포트", expanded=False):
 # ───────────────────────────────────────────────
 # 7. 주가 정보 조회
 # ───────────────────────────────────────────────
-##st.subheader("📈 주가 현황")
-##
-##today = datetime.date.today()
-##start_date_for_yf = today - datetime.timedelta(days=370)
-##end_date_for_yf   = today + datetime.timedelta(days=1)
-##
-### (1) 객체 미리 초기화 → NameError 방지
-##close_left  = pd.DataFrame()
-##close_right = pd.DataFrame()
-##
-##col1, col2 = st.columns(2)
-##
-### ---- (1-A) 코스피/코스닥 ----
-##with col1:
-##    left_tickers = {"코스피": "^KS11", "코스닥": "^KQ11"}
-##    left_data = download_prices(list(left_tickers.values()), start_date_for_yf, end_date_for_yf)
-##    if left_data.empty:
-##        st.warning("코스피/코스닥 데이터를 가져오지 못했습니다.")
-##    else:
-##        close_left = left_data['Close'] if isinstance(left_data.columns, pd.MultiIndex) else left_data[['Close']]
-##        close_left.rename(columns={v: k for k, v in left_tickers.items()}, inplace=True)
-##
-##        fig, ax1 = plt.subplots(figsize=(8, 4))
-##        ax1.plot(close_left.index, close_left["코스피"], label="코스피", color='blue')
-##        ax1.set_ylabel("코스피", color='blue', fontproperties=fontprop)
-##        ax1.tick_params(axis='y', labelcolor='blue')
-##        ax2 = ax1.twinx()
-##        ax2.plot(close_left.index, close_left["코스닥"], label="코스닥", color='red')
-##        ax2.set_ylabel("코스닥", color='red', fontproperties=fontprop)
-##        ax2.tick_params(axis='y', labelcolor='red')
-##        ax1.legend(prop=fontprop)
-##        ax1.set_title("코스피 / 코스닥 지수", fontproperties=fontprop)
-##        st.pyplot(fig)
-##
-### ---- (1-B) 삼성전자/하이닉스 ----
-##with col2:
-##    right_tickers = {"삼성전자": "005930.KS", "SK하이닉스": "000660.KS"}
-##    right_data = download_prices(list(right_tickers.values()), start_date_for_yf, end_date_for_yf)
-##    if right_data.empty:
-##        st.warning("삼성전자/SK하이닉스 데이터를 가져오지 못했습니다.")
-##    else:
-##        close_right = right_data['Close'] if isinstance(right_data.columns, pd.MultiIndex) else right_data[['Close']]
-##        close_right.rename(columns={v: k for k, v in right_tickers.items()}, inplace=True)
-##
-##        fig, ax1 = plt.subplots(figsize=(8, 4))
-##        ax1.plot(close_right.index, close_right["삼성전자"], label="삼성전자", color='blue')
-##        ax1.set_ylabel("삼성전자", color='blue', fontproperties=fontprop)
-##        ax1.tick_params(axis='y', labelcolor='blue')
-##        ax2 = ax1.twinx()
-##        ax2.plot(close_right.index, close_right["SK하이닉스"], label="SK하이닉스", color='red')
-##        ax2.set_ylabel("SK하이닉스", color='red', fontproperties=fontprop)
-##        ax2.tick_params(axis='y', labelcolor='red')
-##        ax1.legend(prop=fontprop)
-##        ax1.set_title("삼성전자 / SK하이닉스", fontproperties=fontprop)
-##        st.pyplot(fig)
-##
-### ---- 1일 변동률 간단 히든 요약 ----
-##if not close_right.empty:
-##    for ticker in ["삼성전자", "SK하이닉스"]:
-##        s = close_right[ticker].dropna().sort_index()
-##        if len(s) >= 2:
-##            pct = (s.iloc[-1] / s.iloc[-2] - 1) * 100
-##            st.write(f"{s.index[-1].date()} | {ticker}: {s.iloc[-1]:,.0f}원 / {pct:+.1f}%")
-##else:
-##    st.write("삼성전자/SK하이닉스 데이터가 없습니다.")
-##
-### ---- 변동률 표 + 정규화 그래프 ----
-##with st.expander("📑 주가 변동률 표 보기", expanded=False):
-##
-##    # 국내 (코스피/코스닥 + 삼성전자/하이닉스)
-##    domestic_dfs = []
-##    for df in [close_left, close_right]:
-##        if df.empty:
-##            continue
-##        for col in df.columns:
-##            s = df[col].dropna().sort_index()
-##            if s.empty:
-##                continue
-##            latest = s.index[-1]
-##            row = {
-##                "종목": col,
-##                latest.strftime("%m/%d"): f"{s.iloc[-1]:,.0f}"
-##            }
-##            for days, tag in [(1, "-1D"), (7, "-1W"), (30, "-1M"), (365, "-1Y")]:
-##                prev = s[s.index <= latest - pd.Timedelta(days=days)]
-##                row[tag] = f"{(s.iloc[-1] / prev.iloc[-1] - 1) * 100:+.1f}%" if not prev.empty else "—"
-##            domestic_dfs.append(row)
-##    if domestic_dfs:
-##        st.markdown("### 🇰🇷 국내")
-##        st.dataframe(pd.DataFrame(domestic_dfs).style.set_properties(**{"font-size": "11px"}))
-##    else:
-##        st.write("국내 데이터가 없습니다.")
-##
-##    # 해외 (나스닥/필라델피아/마이크론)
-##    extra_tickers = {"나스닥": "^IXIC", "필라델피아": "^SOX", "마이크론": "MU"}
-##    extra_data    = download_prices(list(extra_tickers.values()), start_date_for_yf, end_date_for_yf)
-##    foreign_dfs   = []
-##    if not extra_data.empty:
-##        close_extra = extra_data['Close'] if isinstance(extra_data.columns, pd.MultiIndex) else extra_data[['Close']]
-##        close_extra.rename(columns={v: k for k, v in extra_tickers.items()}, inplace=True)
-##        for col in close_extra.columns:
-##            s = close_extra[col].dropna().sort_index()
-##            latest = s.index[-1]
-##            row = {
-##                "종목": col,
-##                latest.strftime("%m/%d"): f"{s.iloc[-1]:,.0f}"
-##            }
-##            for days, tag in [(1, "-1D"), (7, "-1W"), (30, "-1M"), (365, "-1Y")]:
-##                prev = s[s.index <= latest - pd.Timedelta(days=days)]
-##                row[tag] = f"{(s.iloc[-1] / prev.iloc[-1] - 1) * 100:+.1f}%" if not prev.empty else "—"
-##            foreign_dfs.append(row)
-##        st.markdown("### 🌏 해외")
-##        st.dataframe(pd.DataFrame(foreign_dfs).style.set_properties(**{"font-size": "11px"}))
-##    else:
-##        st.write("해외 데이터가 없습니다.")
-##
-##    # ---- 1년 정규화 그래프 (코스닥 제외) ----
-##    if not close_left.empty or not close_right.empty or (locals().get("close_extra", pd.DataFrame()).empty is False):
-##        # 코스닥 제외
-##        close_left_wo_kq = close_left.drop(columns=["코스닥"], errors="ignore")
-##        all_data = pd.concat([close_left_wo_kq, close_right, locals().get("close_extra", pd.DataFrame())], axis=1)
-##        all_data = all_data.sort_index()
-##
-##        end_date  = all_data.dropna(how="all").index.max()
-##        base_date = end_date - pd.Timedelta(days=365)
-##
-##        norm_dfs, valid_cols = [], []
-##        for col in all_data.columns:
-##            s = all_data[col].dropna().sort_index()
-##            base = s[s.index <= base_date]
-##            if base.empty:
-##                continue
-##            norm = (s / base.iloc[-1]) * 100
-##            norm_dfs.append(norm)
-##            valid_cols.append(col)
-##
-##        if norm_dfs:
-##            normalized_all = pd.concat(norm_dfs, axis=1)
-##            normalized_all.columns = valid_cols
-##            normalized_all = normalized_all[normalized_all.index >= base_date]
-##
-##            fig, ax = plt.subplots(figsize=(10, 5))
-##            for col in normalized_all.columns:
-##                ls = "--" if col in ["코스피", "나스닥", "필라델피아"] else "-"
-##                ax.plot(normalized_all.index, normalized_all[col], label=col, linestyle=ls)
-##            ax.set_ylabel("정규화 가격 (1년 전 = 100)", fontproperties=fontprop)
-##            ax.set_title("전체 정규화 가격 비교", fontproperties=fontprop)
-##            ax.legend(prop=fontprop)
-##            st.pyplot(fig)
-##        else:
-##            st.warning("1년 전 기준 데이터가 부족해 정규화 그래프를 그릴 수 없습니다.")
-##    else:
-##        st.warning("주가 데이터가 모두 비어 있어 정규화 그래프를 그릴 수 없습니다.")
+st.subheader("📈 주가 현황")
+
+today = datetime.date.today()
+start_date_for_yf = today - datetime.timedelta(days=370)
+end_date_for_yf   = today + datetime.timedelta(days=1)
+
+# (1) 객체 미리 초기화 → NameError 방지
+close_left  = pd.DataFrame()
+close_right = pd.DataFrame()
+
+col1, col2 = st.columns(2)
+
+# ---- (1-A) 코스피/코스닥 ----
+with col1:
+    left_tickers = {"코스피": "^KS11", "코스닥": "^KQ11"}
+    left_data = download_prices(list(left_tickers.values()), start_date_for_yf, end_date_for_yf)
+    if left_data.empty:
+        st.warning("코스피/코스닥 데이터를 가져오지 못했습니다.")
+    else:
+        close_left = left_data['Close'] if isinstance(left_data.columns, pd.MultiIndex) else left_data[['Close']]
+        close_left.rename(columns={v: k for k, v in left_tickers.items()}, inplace=True)
+
+        fig, ax1 = plt.subplots(figsize=(8, 4))
+        ax1.plot(close_left.index, close_left["코스피"], label="코스피", color='blue')
+        ax1.set_ylabel("코스피", color='blue', fontproperties=fontprop)
+        ax1.tick_params(axis='y', labelcolor='blue')
+        ax2 = ax1.twinx()
+        ax2.plot(close_left.index, close_left["코스닥"], label="코스닥", color='red')
+        ax2.set_ylabel("코스닥", color='red', fontproperties=fontprop)
+        ax2.tick_params(axis='y', labelcolor='red')
+        ax1.legend(prop=fontprop)
+        ax1.set_title("코스피 / 코스닥 지수", fontproperties=fontprop)
+        st.pyplot(fig)
+
+# ---- (1-B) 삼성전자/하이닉스 ----
+with col2:
+    right_tickers = {"삼성전자": "005930.KS", "SK하이닉스": "000660.KS"}
+    right_data = download_prices(list(right_tickers.values()), start_date_for_yf, end_date_for_yf)
+    if right_data.empty:
+        st.warning("삼성전자/SK하이닉스 데이터를 가져오지 못했습니다.")
+    else:
+        close_right = right_data['Close'] if isinstance(right_data.columns, pd.MultiIndex) else right_data[['Close']]
+        close_right.rename(columns={v: k for k, v in right_tickers.items()}, inplace=True)
+
+        fig, ax1 = plt.subplots(figsize=(8, 4))
+        ax1.plot(close_right.index, close_right["삼성전자"], label="삼성전자", color='blue')
+        ax1.set_ylabel("삼성전자", color='blue', fontproperties=fontprop)
+        ax1.tick_params(axis='y', labelcolor='blue')
+        ax2 = ax1.twinx()
+        ax2.plot(close_right.index, close_right["SK하이닉스"], label="SK하이닉스", color='red')
+        ax2.set_ylabel("SK하이닉스", color='red', fontproperties=fontprop)
+        ax2.tick_params(axis='y', labelcolor='red')
+        ax1.legend(prop=fontprop)
+        ax1.set_title("삼성전자 / SK하이닉스", fontproperties=fontprop)
+        st.pyplot(fig)
+
+# ---- 1일 변동률 간단 히든 요약 ----
+if not close_right.empty:
+    for ticker in ["삼성전자", "SK하이닉스"]:
+        s = close_right[ticker].dropna().sort_index()
+        if len(s) >= 2:
+            pct = (s.iloc[-1] / s.iloc[-2] - 1) * 100
+            st.write(f"{s.index[-1].date()} | {ticker}: {s.iloc[-1]:,.0f}원 / {pct:+.1f}%")
+else:
+    st.write("삼성전자/SK하이닉스 데이터가 없습니다.")
+
+# ---- 변동률 표 + 정규화 그래프 ----
+with st.expander("📑 주가 변동률 표 보기", expanded=False):
+
+    # 국내 (코스피/코스닥 + 삼성전자/하이닉스)
+    domestic_dfs = []
+    for df in [close_left, close_right]:
+        if df.empty:
+            continue
+        for col in df.columns:
+            s = df[col].dropna().sort_index()
+            if s.empty:
+                continue
+            latest = s.index[-1]
+            row = {
+                "종목": col,
+                latest.strftime("%m/%d"): f"{s.iloc[-1]:,.0f}"
+            }
+            for days, tag in [(1, "-1D"), (7, "-1W"), (30, "-1M"), (365, "-1Y")]:
+                prev = s[s.index <= latest - pd.Timedelta(days=days)]
+                row[tag] = f"{(s.iloc[-1] / prev.iloc[-1] - 1) * 100:+.1f}%" if not prev.empty else "—"
+            domestic_dfs.append(row)
+    if domestic_dfs:
+        st.markdown("# 🇰🇷 국내")
+        st.dataframe(pd.DataFrame(domestic_dfs).style.set_properties(**{"font-size": "11px"}))
+    else:
+        st.write("국내 데이터가 없습니다.")
+
+    # 해외 (나스닥/필라델피아/마이크론)
+    extra_tickers = {"나스닥": "^IXIC", "필라델피아": "^SOX", "마이크론": "MU"}
+    extra_data    = download_prices(list(extra_tickers.values()), start_date_for_yf, end_date_for_yf)
+    foreign_dfs   = []
+    if not extra_data.empty:
+        close_extra = extra_data['Close'] if isinstance(extra_data.columns, pd.MultiIndex) else extra_data[['Close']]
+        close_extra.rename(columns={v: k for k, v in extra_tickers.items()}, inplace=True)
+        for col in close_extra.columns:
+            s = close_extra[col].dropna().sort_index()
+            latest = s.index[-1]
+            row = {
+                "종목": col,
+                latest.strftime("%m/%d"): f"{s.iloc[-1]:,.0f}"
+            }
+            for days, tag in [(1, "-1D"), (7, "-1W"), (30, "-1M"), (365, "-1Y")]:
+                prev = s[s.index <= latest - pd.Timedelta(days=days)]
+                row[tag] = f"{(s.iloc[-1] / prev.iloc[-1] - 1) * 100:+.1f}%" if not prev.empty else "—"
+            foreign_dfs.append(row)
+        st.markdown("# 🌏 해외")
+        st.dataframe(pd.DataFrame(foreign_dfs).style.set_properties(**{"font-size": "11px"}))
+    else:
+        st.write("해외 데이터가 없습니다.")
+
+    # ---- 1년 정규화 그래프 (코스닥 제외) ----
+    if not close_left.empty or not close_right.empty or (locals().get("close_extra", pd.DataFrame()).empty is False):
+        # 코스닥 제외
+        close_left_wo_kq = close_left.drop(columns=["코스닥"], errors="ignore")
+        all_data = pd.concat([close_left_wo_kq, close_right, locals().get("close_extra", pd.DataFrame())], axis=1)
+        all_data = all_data.sort_index()
+
+        end_date  = all_data.dropna(how="all").index.max()
+        base_date = end_date - pd.Timedelta(days=365)
+
+        norm_dfs, valid_cols = [], []
+        for col in all_data.columns:
+            s = all_data[col].dropna().sort_index()
+            base = s[s.index <= base_date]
+            if base.empty:
+                continue
+            norm = (s / base.iloc[-1]) * 100
+            norm_dfs.append(norm)
+            valid_cols.append(col)
+
+        if norm_dfs:
+            normalized_all = pd.concat(norm_dfs, axis=1)
+            normalized_all.columns = valid_cols
+            normalized_all = normalized_all[normalized_all.index >= base_date]
+
+            fig, ax = plt.subplots(figsize=(10, 5))
+            for col in normalized_all.columns:
+                ls = "--" if col in ["코스피", "나스닥", "필라델피아"] else "-"
+                ax.plot(normalized_all.index, normalized_all[col], label=col, linestyle=ls)
+            ax.set_ylabel("정규화 가격 (1년 전 = 100)", fontproperties=fontprop)
+            ax.set_title("전체 정규화 가격 비교", fontproperties=fontprop)
+            ax.legend(prop=fontprop)
+            st.pyplot(fig)
+        else:
+            st.warning("1년 전 기준 데이터가 부족해 정규화 그래프를 그릴 수 없습니다.")
+    else:
+        st.warning("주가 데이터가 모두 비어 있어 정규화 그래프를 그릴 수 없습니다.")
+
 
 
 # ───────────────────────────────────────────────

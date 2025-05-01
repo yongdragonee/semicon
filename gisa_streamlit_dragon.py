@@ -239,13 +239,13 @@ with st.expander("📑 주가 변동률 표 보기", expanded=False):
                 row[tag] = f"{(s.iloc[-1] / prev.iloc[-1] - 1) * 100:+.1f}%" if not prev.empty else "—"
             domestic_dfs.append(row)
     if domestic_dfs:
-        st.markdown("# 🇰🇷 국내")
+        st.markdown("# 🦖 국내")
         st.dataframe(pd.DataFrame(domestic_dfs).style.set_properties(**{"font-size": "11px"}))
     else:
         st.write("국내 데이터가 없습니다.")
 
     # 해외 (나스닥/필라델피아/마이크론)
-    extra_tickers = {"나스닥": "IXIC", "필라델피아": "SOX", "마이크론": "MU"}
+    extra_tickers = {"나스닥": "IXIC", "필라델피아": "SOXX", "마이크론": "MU"}
     extra_data    = download_prices(list(extra_tickers.values()), start_date, end_date)
     foreign_dfs   = []
     if not extra_data.empty:

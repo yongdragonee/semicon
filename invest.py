@@ -104,7 +104,7 @@ def format_report(idx):
             💾 {filesize_info} Byte<br><br>
           </span>
         </summary>
-      <div style='margin-top: 11px; padding-left: 11px;'>
+      <div style='margin-top: 11px; padding-left: 11px;'><br>
         <p><b>전체요약:<br></b> {full_summary}</p>
         <p><b>증권사:</b> {analyst_info}</p>
         <p><b>파일크기:</b> {filesize_info}</p>

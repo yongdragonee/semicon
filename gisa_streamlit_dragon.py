@@ -167,46 +167,57 @@ col1, col2 = st.columns(2)
 
 # ---- (2-A) 코스피/코스닥 ----
 with col1:
-    left_tickers = {"코스피": "KS11", "코스닥": "KQ11"}        # ← FDR 형식
-    left_data = download_prices(list(left_tickers.values()), start_date, end_date)
+    left_tickers = {"코스피": "KS11", "코스닥": "KQ11"}
+    left_data   = download_prices(list(left_tickers.values()), start_date, end_date)
     if left_data.empty:
         st.warning("코스피/코스닥 데이터를 가져오지 못했습니다.")
     else:
         close_left = left_data.rename(columns={v: k for k, v in left_tickers.items()})
 
         fig, ax1 = plt.subplots(figsize=(8, 4))
-        ax1.plot(close_left.index, close_left["코스피"], label="코스피", color='blue')
-        ax1.set_ylabel("코스피", color='blue', fontproperties=fontprop)
+        ax1.plot(close_left.index, close_left["코스피"],  label="코스피",  color='blue')
+        ax1.set_ylabel("코스피",  color='blue', fontproperties=fontprop)
         ax1.tick_params(axis='y', labelcolor='blue')
+
         ax2 = ax1.twinx()
         ax2.plot(close_left.index, close_left["코스닥"], label="코스닥", color='red')
-        ax2.set_ylabel("코스닥", color='red', fontproperties=fontprop)
+        ax2.set_ylabel("코스닥", color='red',  fontproperties=fontprop)
         ax2.tick_params(axis='y', labelcolor='red')
-        ax1.legend(prop=fontprop)
+
+        # ★ 두 축의 범례 대상 합치기
+        lines1, labels1 = ax1.get_legend_handles_labels()
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        ax1.legend(lines1 + lines2, labels1 + labels2, prop=fontprop, loc="upper left")
+
         ax1.set_title("코스피 / 코스닥 지수", fontproperties=fontprop)
         st.pyplot(fig)
 
 # ---- (2-B) 삼성전자/하이닉스 ----
 with col2:
     right_tickers = {"삼성전자": "005930", "SK하이닉스": "000660"}
-    right_data = download_prices(list(right_tickers.values()), start_date, end_date)
+    right_data    = download_prices(list(right_tickers.values()), start_date, end_date)
     if right_data.empty:
         st.warning("삼성전자/SK하이닉스 데이터를 가져오지 못했습니다.")
     else:
         close_right = right_data.rename(columns={v: k for k, v in right_tickers.items()})
 
         fig, ax1 = plt.subplots(figsize=(8, 4))
-        ax1.plot(close_right.index, close_right["삼성전자"], label="삼성전자", color='blue')
-        ax1.set_ylabel("삼성전자", color='blue', fontproperties=fontprop)
+        ax1.plot(close_right.index, close_right["삼성전자"],  label="삼성전자",  color='blue')
+        ax1.set_ylabel("삼성전자",  color='blue', fontproperties=fontprop)
         ax1.tick_params(axis='y', labelcolor='blue')
+
         ax2 = ax1.twinx()
         ax2.plot(close_right.index, close_right["SK하이닉스"], label="SK하이닉스", color='red')
         ax2.set_ylabel("SK하이닉스", color='red', fontproperties=fontprop)
         ax2.tick_params(axis='y', labelcolor='red')
-        ax1.legend(prop=fontprop)
+
+        # ★ 두 축 범례 합치기
+        lines1, labels1 = ax1.get_legend_handles_labels()
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        ax1.legend(lines1 + lines2, labels1 + labels2, prop=fontprop, loc="upper left")
+
         ax1.set_title("삼성전자 / SK하이닉스", fontproperties=fontprop)
         st.pyplot(fig)
-
 # ---- 1일 변동률 간단 히든 요약 ----
 if not close_right.empty:
     for ticker in ["삼성전자", "SK하이닉스"]:

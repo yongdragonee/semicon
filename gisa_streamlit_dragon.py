@@ -123,7 +123,7 @@ selected_keywords = st.sidebar.multiselect("🔍 키워드 (복수 선택 가능
 search_query      = st.sidebar.text_input("🔎 검색어 입력 (제목/요약 포함)")
 st.sidebar.write("---")
 st.sidebar.write("문의/아이디어 : yh9003.lee@samsung.com")
-st.sidebar.write("3/5 Streamlit 오픈 · 3/13 검색 추가 · 3/29 주가현황 추가 · 4/12 증권레포트 추가 · 5/1 API 정책 Issue 주가현황 제거 ")
+st.sidebar.write("3/5 Streamlit 오픈 · 3/13 검색 추가 · 3/29 주가현황 추가 · 4/12 증권레포트 추가")
 
 # ───────────────────────────────────────────────
 # 5. 뉴스 필터링

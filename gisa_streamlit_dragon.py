@@ -44,31 +44,51 @@ def load_report_data(csv_url: str) -> pd.DataFrame:
         return pd.DataFrame()
 
 # ───────────────────────────────────────────────
-# 2. 주가 다운로드 (캐싱 + 재시도)
+# 2. 주가 다운로드 (캐싱 + 재시도) - 개선 버전
 # ───────────────────────────────────────────────
-@st.cache_data(ttl=900, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)  # ← TTL을 1시간으로 증가
 def download_prices(tickers: list[str],
                     start: datetime.date,
                     end: datetime.date,
-                    retries: int = 2) -> pd.DataFrame:
+                    retries: int = 5) -> pd.DataFrame:  # ← 재시도 5번으로 증가
     """
     FinanceDataReader를 이용해 종가만 가져와 하나의 DataFrame으로 합친다.
-    (단일 API 장애 시를 대비해 간단히 재시도)
+    (Exponential backoff 방식으로 재시도)
     """
     start_str, end_str = start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d")
     frames = []
 
     for t in tickers:
+        success = False
         for attempt in range(retries + 1):
             try:
                 df = fdr.DataReader(t, start_str, end_str)[['Close']].rename(columns={'Close': t})
                 frames.append(df)
+                success = True
                 break
             except Exception as e:
                 if attempt < retries:
-                    time.sleep(5)
+                    # Exponential backoff: 5초, 10초, 20초, 40초, 80초
+                    wait_time = 5 * (2 ** attempt)
+                    error_msg = str(e)
+                    
+                    # HTML 오류 메시지인 경우 간략하게 표시
+                    if '<html>' in error_msg.lower() or 'service unavailable' in error_msg.lower():
+                        st.warning(f"⚠️ {t} 데이터 수집 중 KRX 서버 응답 대기 ({attempt + 1}/{retries + 1}회) - {wait_time}초 후 재시도...")
+                    else:
+                        st.warning(f"⚠️ {t} 데이터 수집 실패 ({attempt + 1}/{retries + 1}회) - {wait_time}초 후 재시도...")
+                    
+                    time.sleep(wait_time)
                 else:
-                    st.warning(f"{t} 데이터 수집 실패: {e}")
+                    # 최종 실패 시 간략한 에러 메시지
+                    if '<html>' in str(e).lower():
+                        st.error(f"❌ {t} 데이터를 가져올 수 없습니다. (KRX 서버 일시적 장애)")
+                    else:
+                        st.error(f"❌ {t} 데이터 수집 최종 실패")
+        
+        # 특정 티커 실패 시에도 계속 진행
+        if not success:
+            st.info(f"ℹ️ {t} 데이터 없이 계속 진행합니다.")
 
     return pd.concat(frames, axis=1) if frames else pd.DataFrame()
 
@@ -168,9 +188,11 @@ col1, col2 = st.columns(2)
 # ---- (2-A) 코스피/코스닥 ----
 with col1:
     left_tickers = {"코스피": "KS11", "코스닥": "KQ11"}
-    left_data   = download_prices(list(left_tickers.values()), start_date, end_date)
+    with st.spinner("📊 코스피/코스닥 데이터 수집 중..."):  # ← 스피너 추가
+        left_data = download_prices(list(left_tickers.values()), start_date, end_date)
+    
     if left_data.empty:
-        st.warning("코스피/코스닥 데이터를 가져오지 못했습니다.")
+        st.warning("⚠️ 코스피/코스닥 데이터를 가져오지 못했습니다. 잠시 후 다시 시도해주세요.")
     else:
         close_left = left_data.rename(columns={v: k for k, v in left_tickers.items()})
 
@@ -195,9 +217,11 @@ with col1:
 # ---- (2-B) 삼성전자/하이닉스 ----
 with col2:
     right_tickers = {"삼성전자": "005930", "SK하이닉스": "000660"}
-    right_data    = download_prices(list(right_tickers.values()), start_date, end_date)
+    with st.spinner("📊 삼성전자/SK하이닉스 데이터 수집 중..."):  # ← 스피너 추가
+        right_data = download_prices(list(right_tickers.values()), start_date, end_date)
+    
     if right_data.empty:
-        st.warning("삼성전자/SK하이닉스 데이터를 가져오지 못했습니다.")
+        st.warning("⚠️ 삼성전자/SK하이닉스 데이터를 가져오지 못했습니다. 잠시 후 다시 시도해주세요.")
     else:
         close_right = right_data.rename(columns={v: k for k, v in right_tickers.items()})
 
@@ -218,6 +242,7 @@ with col2:
 
         ax1.set_title("삼성전자 / SK하이닉스", fontproperties=fontprop)
         st.pyplot(fig)
+
 # ---- 1일 변동률 간단 히든 요약 ----
 if not close_right.empty:
     for ticker in ["삼성전자", "SK하이닉스"]:
@@ -257,8 +282,10 @@ with st.expander("📑 주가 변동률 표 보기", expanded=False):
 
     # 해외 (나스닥/필라델피아/마이크론)
     extra_tickers = {"나스닥": "IXIC", "필라델피아": "SOXX", "마이크론": "MU"}
-    extra_data    = download_prices(list(extra_tickers.values()), start_date, end_date)
-    foreign_dfs   = []
+    with st.spinner("🌏 해외 데이터 수집 중..."):  # ← 스피너 추가
+        extra_data = download_prices(list(extra_tickers.values()), start_date, end_date)
+    
+    foreign_dfs = []
     if not extra_data.empty:
         close_extra = extra_data.rename(columns={v: k for k, v in extra_tickers.items()})
         for col in close_extra.columns:

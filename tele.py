@@ -244,8 +244,6 @@ def format_message(row):
             </span>
         </summary>
         <div style='margin-top: 15px; padding: 15px; background-color: #ffffff; border-left: 3px solid #4CAF50; border-radius: 5px;'>
-            <h4>📌 요약</h4>
-            <p style="white-space: pre-wrap; line-height: 1.6;">{summary_str}</p>
             
             <h4>🔑 키워드</h4>
             <p><span style="background-color: #e3f2fd; padding: 3px 8px; border-radius: 3px; margin-right: 5px;">{keywords_str}</span></p>

@@ -235,7 +235,7 @@ def format_message(row):
     html_output = f"""
     <details>
         <summary style="cursor: pointer; padding: 10px; background-color: #f0f2f6; border-radius: 5px; margin-bottom: 10px;">
-            <span style="font-size: 18px;"><b>📅 {date_str}</b> | <b>📺 {channel_str}</b></span><br>
+            <span style="font-size: 18px;"><b>📅 {date_str}</b></span><br>
             <span style="font-size: 14px; color: #666;">
                 {summary_str}
             </span><br>

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 # 페이지 설정
 st.set_page_config(
-    page_title="반도체 텔레그램 메시지 분석",
+    page_title="반도체 정보 수집기",
     page_icon="💬",
     layout="wide"
 )
@@ -137,29 +137,11 @@ if MESSAGE_LENGTH_COLUMN in filtered_data.columns:
     ]
 
 # 메인 타이틀
-st.title("💬 반도체 텔레그램 메시지 분석기")
+st.title("💬 반도체 정보 수집기")
 
-# 통계 정보 표시
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    st.metric("전체 메시지", len(data))
-with col2:
-    st.metric("필터링된 메시지", len(filtered_data))
-with col3:
-    if not filtered_data.empty:
-        avg_length = int(filtered_data[MESSAGE_LENGTH_COLUMN].mean())
-        st.metric("평균 메시지 길이", f"{avg_length}자")
-    else:
-        st.metric("평균 메시지 길이", "-")
-with col4:
-    if not filtered_data.empty:
-        unique_channels = filtered_data[CHANNEL_COLUMN].nunique()
-        st.metric("채널 수", unique_channels)
-    else:
-        st.metric("채널 수", "-")
 
 # 페이지네이션
-ITEMS_PER_PAGE = 10
+ITEMS_PER_PAGE = 50
 
 if not filtered_data.empty:
     # 날짜 내림차순 정렬
@@ -227,9 +209,9 @@ def format_message(row):
     html = f"""
     <details>
         <summary style="cursor: pointer; padding: 10px; background-color: #f0f2f6; border-radius: 5px; margin-bottom: 10px;">
-            <span style="font-size: 18px;"><b>📅 {date_str}</b> | <b>📺 {channel_str}</b></span><br>
+            <span style="font-size: 18px;"><b>📅 {date_str}</b>
             <span style="font-size: 14px; color: #666;">
-                {preview_text}
+                {summary_str}
             </span><br>
             <span style="font-size: 13px;">
                 🏷️ {labels_str} | {sentiment_emoji} {sentiment_str} | 📏 {msg_length}자

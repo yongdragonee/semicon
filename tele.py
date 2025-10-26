@@ -251,7 +251,7 @@ def format_message(row):
         full_message = str(row[MESSAGE_COLUMN])
     full_message = html.escape(full_message)
     
-    html = f"""
+    html_output = f"""
     <details>
         <summary style="cursor: pointer; padding: 10px; background-color: #f0f2f6; border-radius: 5px; margin-bottom: 10px;">
             <span style="font-size: 18px;"><b>📅 {date_str}</b> | <b>📺 {channel_str}</b></span><br>
@@ -281,7 +281,7 @@ def format_message(row):
         </div>
     </details>
     """
-    return html
+    return html_output
 
 # 페이지 데이터 출력
 if not page_data.empty:

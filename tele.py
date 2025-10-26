@@ -11,7 +11,7 @@ st.set_page_config(
 )
 
 # GitHub CSV URL
-GITHUB_TELE_URL = st.secrets["TELE_CSV"]
+GITHUB_TELE_URL = st.secrets["TELE_URL"]
 
 # CSV 파일 로드 함수
 @st.cache_data(ttl=3600)  # 1시간 캐시

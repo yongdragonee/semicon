@@ -97,6 +97,7 @@ def download_prices(tickers: list[str],
 # ───────────────────────────────────────────────
 GITHUB_CSV_URL    = st.secrets["CSV_URL"]    + f"?nocache={int(time.time())}"
 GITHUB_REPORT_URL = st.secrets["REPORT_URL"] + f"?nocache={int(time.time())}"
+TELE_CSV_URL = st.secrets["TELE_CSV"] + f"?nocache={int(time.time())}"
 
 news_df   = load_news_data(GITHUB_CSV_URL)
 report_df = load_report_data(GITHUB_REPORT_URL)

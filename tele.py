@@ -5,13 +5,13 @@ import html
 
 # 페이지 설정
 st.set_page_config(
-    page_title="반도체 정보 수집기",
+    page_title="반도체 텔레그램 메시지 분석",
     page_icon="💬",
     layout="wide"
 )
 
 # GitHub CSV URL
-GITHUB_TELE_URL = st.secrets["TELE_URL"]
+GITHUB_TELE_URL = st.secrets["TELE_CSV"]
 
 # CSV 파일 로드 함수
 @st.cache_data(ttl=3600)  # 1시간 캐시
@@ -160,7 +160,7 @@ with col4:
         st.metric("채널 수", "-")
 
 # 페이지네이션
-ITEMS_PER_PAGE = 50
+ITEMS_PER_PAGE = 10
 
 if not filtered_data.empty:
     # 날짜 내림차순 정렬
@@ -236,9 +236,9 @@ def format_message(row):
     html = f"""
     <details>
         <summary style="cursor: pointer; padding: 10px; background-color: #f0f2f6; border-radius: 5px; margin-bottom: 10px;">
-            <span style="font-size: 18px;"><b>📅 {date_str}</b></span><br>
+            <span style="font-size: 18px;"><b>📅 {date_str}</b> | <b>📺 {channel_str}</b></span><br>
             <span style="font-size: 14px; color: #666;">
-                {summary_str}
+                {preview_text}
             </span><br>
             <span style="font-size: 13px;">
                 🏷️ {labels_str} | {sentiment_emoji} {sentiment_str} | 📏 {msg_length}자

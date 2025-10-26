@@ -11,7 +11,7 @@ st.set_page_config(
 )
 
 # GitHub CSV URL
-GITHUB_TELE_URL = st.secrets["TELE_URL"]
+GITHUB_TELE_URL = st.secrets["TELE_CSV"]
 
 # CSV 파일 로드 함수
 @st.cache_data(ttl=3600)  # 1시간 캐시
@@ -192,45 +192,63 @@ else:
 def format_message(row):
     """HTML 포맷팅"""
     # 날짜 포맷팅
-    if DATE_COLUMN in row and pd.notnull(row[DATE_COLUMN]):
+    date_str = "날짜 없음"
+    if DATE_COLUMN in row.index and pd.notnull(row[DATE_COLUMN]):
         date_val = row[DATE_COLUMN]
-        date_str = date_val.strftime('%Y-%m-%d %H:%M') if isinstance(date_val, pd.Timestamp) else str(date_val)
-    else:
-        date_str = "날짜 없음"
+        if isinstance(date_val, pd.Timestamp):
+            date_str = date_val.strftime('%Y-%m-%d %H:%M')
+        else:
+            date_str = str(date_val)
     date_str = html.escape(date_str)
     
     # 채널 정보
-    channel_str = str(row[CHANNEL_COLUMN]) if pd.notnull(row[CHANNEL_COLUMN]) else "채널 없음"
+    channel_str = "채널 없음"
+    if CHANNEL_COLUMN in row.index and pd.notnull(row[CHANNEL_COLUMN]):
+        channel_str = str(row[CHANNEL_COLUMN])
     channel_str = html.escape(channel_str)
     
     # 라벨
-    labels_str = str(row[LABELS_COLUMN]) if pd.notnull(row[LABELS_COLUMN]) else "라벨 없음"
+    labels_str = "라벨 없음"
+    if LABELS_COLUMN in row.index and pd.notnull(row[LABELS_COLUMN]):
+        labels_str = str(row[LABELS_COLUMN])
     labels_str = html.escape(labels_str)
     
     # 감성
-    sentiment_raw = str(row[SENTIMENT_COLUMN]) if pd.notnull(row[SENTIMENT_COLUMN]) else "감성 없음"
+    sentiment_raw = "감성 없음"
+    if SENTIMENT_COLUMN in row.index and pd.notnull(row[SENTIMENT_COLUMN]):
+        sentiment_raw = str(row[SENTIMENT_COLUMN])
     sentiment_emoji = {"긍정적": "😊", "부정적": "😟", "중립적": "😐"}.get(sentiment_raw, "❓")
     sentiment_str = html.escape(sentiment_raw)
     
     # 키워드
-    keywords_str = str(row[KEYWORDS_COLUMN]) if pd.notnull(row[KEYWORDS_COLUMN]) else "키워드 없음"
+    keywords_str = "키워드 없음"
+    if KEYWORDS_COLUMN in row.index and pd.notnull(row[KEYWORDS_COLUMN]):
+        keywords_str = str(row[KEYWORDS_COLUMN])
     keywords_str = html.escape(keywords_str)
     
     # 메시지 길이
-    msg_length = str(row[MESSAGE_LENGTH_COLUMN]) if pd.notnull(row[MESSAGE_LENGTH_COLUMN]) else "0"
+    msg_length = "0"
+    if MESSAGE_LENGTH_COLUMN in row.index and pd.notnull(row[MESSAGE_LENGTH_COLUMN]):
+        msg_length = str(row[MESSAGE_LENGTH_COLUMN])
     
     # 요약
-    summary_str = str(row[SUMMARY_COLUMN]).strip() if pd.notnull(row[SUMMARY_COLUMN]) else "요약 정보가 없습니다."
+    summary_str = "요약 정보가 없습니다."
+    if SUMMARY_COLUMN in row.index and pd.notnull(row[SUMMARY_COLUMN]):
+        summary_str = str(row[SUMMARY_COLUMN]).strip()
     summary_str = html.escape(summary_str)
     
     # 정규화된 텍스트 (미리보기용)
-    preview_text = str(row[NORMALIZED_TEXT_COLUMN])[:200] if pd.notnull(row[NORMALIZED_TEXT_COLUMN]) else ""
-    if len(str(row[NORMALIZED_TEXT_COLUMN])) > 200:
-        preview_text += "..."
+    preview_text = ""
+    if NORMALIZED_TEXT_COLUMN in row.index and pd.notnull(row[NORMALIZED_TEXT_COLUMN]):
+        preview_text = str(row[NORMALIZED_TEXT_COLUMN])[:200]
+        if len(str(row[NORMALIZED_TEXT_COLUMN])) > 200:
+            preview_text += "..."
     preview_text = html.escape(preview_text)
     
     # 전체 메시지
-    full_message = str(row[MESSAGE_COLUMN]) if pd.notnull(row[MESSAGE_COLUMN]) else "메시지 없음"
+    full_message = "메시지 없음"
+    if MESSAGE_COLUMN in row.index and pd.notnull(row[MESSAGE_COLUMN]):
+        full_message = str(row[MESSAGE_COLUMN])
     full_message = html.escape(full_message)
     
     html = f"""

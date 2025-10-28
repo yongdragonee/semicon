@@ -50,7 +50,7 @@ def load_report_data(csv_url: str) -> pd.DataFrame:
 def download_prices(tickers: list[str],
                     start: datetime.date,
                     end: datetime.date,
-                    retries: int = 5) -> pd.DataFrame:  # ← 재시도 5번으로 증가
+                    retries: int = 2) -> pd.DataFrame:  # ← 재시도 5번으로 증가
     """
     FinanceDataReader를 이용해 종가만 가져와 하나의 DataFrame으로 합친다.
     (Exponential backoff 방식으로 재시도)
